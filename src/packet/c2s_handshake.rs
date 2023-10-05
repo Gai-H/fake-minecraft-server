@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 use std::io::Read;
+use std::net::TcpStream;
 use crate::session::{Session, SessionState};
 use crate::datatype::{string, varint, unsigned_short};
 use crate::packet::{PacketBody, ServerBoundPacket};
@@ -38,7 +39,7 @@ impl PacketBody for C2SHandshakePacket {
         }
     }
 
-    fn handle(&self, _: &mut Session) {
+    fn handle(&self, _: &mut Session, _: &mut TcpStream) {
     }
 }
 

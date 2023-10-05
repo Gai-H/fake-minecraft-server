@@ -44,7 +44,7 @@ fn handle_connection(mut stream: TcpStream) {
         };
         dbg!(&body);
 
-        body.handle(&mut session);
+        body.handle(&mut session, &mut stream);
         body.update_session(&mut session);
     }
 }
