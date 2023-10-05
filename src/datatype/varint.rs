@@ -32,6 +32,28 @@ impl From<i32> for VarInt {
     }
 }
 
+impl Into<Vec<u8>> for VarInt {
+    fn into(self) -> Vec<u8> {
+        let mut res: Vec<u8> = Vec::new();
+        let mut value: u32 = if self.value < 0 {
+            u32::from_be_bytes(self.value.to_be_bytes())
+        } else {
+            self.value as u32
+        };
+
+        loop {
+            if ((value as u8) & !Self::SEGMENT_BITS) == 0 {
+                res.push(value as u8);
+                break;
+            } else {
+                res.push(((value as u8) & Self::SEGMENT_BITS) | Self::CONTINUE_BIT);
+                value >>= 7;
+            }
+        }
+        res
+    }
+}
+
 pub fn read_from_stream(stream: &mut impl Read) -> Result<VarInt, std::string::String> {
     let mut varint_bytes: Vec<u8> = Vec::new();
     let mut byte = [0; 1];
@@ -47,4 +69,30 @@ pub fn read_from_stream(stream: &mut impl Read) -> Result<VarInt, std::string::S
         }
     }
     Ok(VarInt::from(&varint_bytes[..]))
+}
+
+#[cfg(test)]
+mod test {
+    use crate::datatype::varint::VarInt;
+
+    #[test]
+    fn test_into_positive() {
+        let vi_positive: VarInt = VarInt::from(150);
+        let vi_positive_into: Vec<u8> = vi_positive.into();
+        assert_eq!(vec![150, 1], vi_positive_into);
+    }
+
+    #[test]
+    fn test_into_negative() {
+        let vi_negative: VarInt = VarInt::from(-1);
+        let vi_negative_into: Vec<u8> = vi_negative.into();
+        assert_eq!(vec![255, 255, 255, 255, 15], vi_negative_into);
+    }
+
+    #[test]
+    fn test_into_zero() {
+        let vi_zero: VarInt = VarInt::from(0);
+        let vi_zero_into: Vec<u8> = vi_zero.into();
+        assert_eq!(vec![0], vi_zero_into);
+    }
 }
