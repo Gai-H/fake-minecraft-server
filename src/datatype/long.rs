@@ -1,6 +1,6 @@
 use std::io::Read;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Long {
     pub value: i64
 }
@@ -14,6 +14,12 @@ impl From<&[u8; 8]> for Long {
 impl From<i64> for Long {
     fn from(v: i64) -> Self {
         Long { value: v }
+    }
+}
+
+impl Into<Vec<u8>> for Long {
+    fn into(self) -> Vec<u8> {
+        self.value.to_be_bytes().to_vec()
     }
 }
 
@@ -36,6 +42,13 @@ mod tests {
         let bytes: [u8; 8] = [0x00, 0x00, 0x00, 0x00, 0x7f, 0xff, 0xff, 0xff];
         let long = Long::from(&bytes);
         assert_eq!(long.value, 2147483647);
+    }
+
+    #[test]
+    fn test_into() {
+        let long = Long::from(2147483647);
+        let bytes: Vec<u8> = long.into();
+        assert_eq!(bytes, [0x00, 0x00, 0x00, 0x00, 0x7f, 0xff, 0xff, 0xff]);
     }
 
     #[test]
