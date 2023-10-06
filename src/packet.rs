@@ -7,6 +7,8 @@ use crate::session::{Session, SessionState};
 pub mod c2s_handshake;
 pub mod c2s_status_request;
 pub mod s2c_status_response;
+pub mod c2s_ping_request;
+pub mod s2c_ping_response;
 
 #[derive(Debug)]
 pub struct PacketHeader {
@@ -41,6 +43,7 @@ pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &Session, h
     return match session.state {
         SessionState::HANDSHAKING => {
             match header.id {
+                // 0x00
                 c2s_handshake::C2SHandshakePacket::PACKET_ID => {
                     let packet = c2s_handshake::C2SHandshakePacket::read_from_stream(stream).unwrap();
                     Ok(packet)
@@ -52,8 +55,14 @@ pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &Session, h
         },
         SessionState::STATUS => {
             match header.id {
+                // 0x00
                 c2s_status_request::C2SStatusRequestPacket::PACKET_ID => {
                     let packet = c2s_status_request::C2SStatusRequestPacket::read_from_stream(stream).unwrap();
+                    Ok(packet)
+                },
+                // 0x01
+                c2s_ping_request::C2SPingRequestPacket::PACKET_ID => {
+                    let packet = c2s_ping_request::C2SPingRequestPacket::read_from_stream(stream).unwrap();
                     Ok(packet)
                 },
                 _ => {

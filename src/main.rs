@@ -53,5 +53,10 @@ fn handle_connection(mut stream: TcpStream) {
             }
         };
         body.update_session(&mut session);
+
+        // terminate
+        if session.next_packet_ids.len() == 0 {
+            break
+        }
     }
 }
