@@ -24,7 +24,7 @@ pub fn read_packet_header_from_stream(stream: &mut TcpStream) -> Result<PacketHe
 
 pub trait PacketBody: Debug {
     fn update_session(&self, session: &mut Session);
-    fn handle(&self, session: &mut Session, stream: &mut TcpStream);
+    fn handle(&self, session: &mut Session, stream: &mut TcpStream) -> Result<(), String>;
 }
 
 pub trait ServerBoundPacketBody: PacketBody {

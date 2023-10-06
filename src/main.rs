@@ -44,7 +44,14 @@ fn handle_connection(mut stream: TcpStream) {
         };
         dbg!(&body);
 
-        body.handle(&mut session, &mut stream);
+        // handle
+        match body.handle(&mut session, &mut stream) {
+            Ok(_) => {},
+            Err(e) => {
+                eprintln!("{}", e);
+                return
+            }
+        };
         body.update_session(&mut session);
     }
 }

@@ -39,7 +39,8 @@ impl PacketBody for C2SHandshakePacket {
         }
     }
 
-    fn handle(&self, _: &mut Session, _: &mut TcpStream) {
+    fn handle(&self, _: &mut Session, _: &mut TcpStream) -> Result<(), std::string::String> {
+        Ok(())
     }
 }
 
