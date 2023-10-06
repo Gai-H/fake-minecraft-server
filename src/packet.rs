@@ -1,5 +1,5 @@
 use std::fmt::Debug;
-use std::io::Read;
+use std::io::{Read, Write};
 use std::net::TcpStream;
 use crate::datatype::varint;
 use crate::session::{Session, SessionState};
@@ -27,8 +27,12 @@ pub trait PacketBody: Debug {
     fn handle(&self, session: &mut Session, stream: &mut TcpStream);
 }
 
-pub trait ServerBoundPacket {
+pub trait ServerBoundPacketBody: PacketBody {
     fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn PacketBody>, std::string::String>;
+}
+
+pub trait ClientBoundPacketBody: PacketBody {
+    fn write_to_stream(&self, stream: &mut impl Write) -> Result<(), std::string::String>;
 }
 
 pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &Session, header: &PacketHeader) -> Result<Box<dyn PacketBody>, std::string::String> {

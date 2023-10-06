@@ -3,7 +3,7 @@ use std::io::Read;
 use std::net::TcpStream;
 use crate::session::{Session, SessionState};
 use crate::datatype::{string, varint, unsigned_short};
-use crate::packet::{PacketBody, ServerBoundPacket};
+use crate::packet::{PacketBody, ServerBoundPacketBody};
 
 #[derive(Debug)]
 pub struct C2SHandshakePacket {
@@ -43,7 +43,7 @@ impl PacketBody for C2SHandshakePacket {
     }
 }
 
-impl ServerBoundPacket for C2SHandshakePacket {
+impl ServerBoundPacketBody for C2SHandshakePacket {
     fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn PacketBody>, std::string::String> {
         let protocol_version = varint::read_from_stream(stream).unwrap();
 
