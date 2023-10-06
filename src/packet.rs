@@ -5,6 +5,8 @@ use crate::datatype::varint;
 use crate::session::{Session, SessionState};
 
 pub mod c2s_handshake;
+pub mod c2s_status_request;
+pub mod s2c_status_response;
 
 #[derive(Debug)]
 pub struct PacketHeader {
@@ -49,7 +51,15 @@ pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &Session, h
             }
         },
         SessionState::STATUS => {
-            Err("Not implemented.".to_string())
+            match header.id {
+                c2s_status_request::C2SStatusRequestPacket::PACKET_ID => {
+                    let packet = c2s_status_request::C2SStatusRequestPacket::read_from_stream(stream).unwrap();
+                    Ok(packet)
+                },
+                _ => {
+                    Err(format!("Invalid packet id {}", header.id))
+                }
+            }
         },
         SessionState::LOGIN => {
             Err("Not implemented.".to_string())
