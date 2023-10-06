@@ -9,7 +9,7 @@ pub struct S2CStatusResponsePacket {
 impl S2CStatusResponsePacket {
     pub const PACKET_ID: i32 = 0x00;
 
-    pub const RESPONSE_JSON: &'static str = "{\"enforcesSecureChat\":false,\"description\":{\"text\":\"A Fake Minecraft Server\"},\"players\":{\"max\":42,\"online\":0},\"version:\":{\"name\":\"1.20.2\",\"protocol\":764}}";
+    pub const RESPONSE_JSON: &'static str = "{\"version\":{\"name\":\"1.20.2\",\"protocol\":764},\"enforcesSecureChat\":true,\"description\":{\"text\":\"A Fake Minecraft Server\"},\"players\":{\"max\":42,\"online\":0}}";
 
     pub fn new() -> S2CStatusResponsePacket {
         S2CStatusResponsePacket {
