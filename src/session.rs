@@ -13,7 +13,9 @@ pub struct Session {
     pub next_packet_ids: &'static [i32],
     pub protocol_version: Option<i32>,
     pub server_address: Option<String>,
-    pub server_port: Option<u16>
+    pub server_port: Option<u16>,
+    pub username: Option<String>,
+    pub uuid: Option<u128>
 }
 
 impl Session {
@@ -22,10 +24,12 @@ impl Session {
     pub fn new() -> Session {
         Session {
             state: SessionState::HANDSHAKING,
+            next_packet_ids: &Session::FIRST_PACKET_IDS,
             protocol_version: None,
             server_address: None,
             server_port: None,
-            next_packet_ids: &Session::FIRST_PACKET_IDS
+            username: None,
+            uuid: None
         }
     }
 }
