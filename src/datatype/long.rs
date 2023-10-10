@@ -1,4 +1,5 @@
 use std::io::Read;
+use crate::datatype::DatatypeError;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Long {
@@ -23,12 +24,12 @@ impl Into<Vec<u8>> for Long {
     }
 }
 
-pub fn read_from_stream(stream: &mut impl Read) -> Result<Long, std::string::String> {
+pub fn read_from_stream(stream: &mut impl Read) -> Result<Long, DatatypeError> {
     let mut bytes: [u8; 8] = [0; 8];
     if let Ok(_) = stream.read_exact(&mut bytes[..]) {
         Ok(Long::from(&bytes))
     } else {
-        Err("Could not read bytes from stream.".to_string())
+        Err(DatatypeError::ReadError)
     }
 }
 

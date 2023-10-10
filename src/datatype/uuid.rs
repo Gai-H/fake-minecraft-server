@@ -1,4 +1,5 @@
 use std::io::Read;
+use crate::datatype::DatatypeError;
 
 #[derive(Debug, PartialEq)]
 pub struct UUID {
@@ -17,12 +18,12 @@ impl From<u128> for UUID {
     }
 }
 
-pub fn read_from_stream(stream: &mut impl Read) -> Result<UUID, &'static str> {
+pub fn read_from_stream(stream: &mut impl Read) -> Result<UUID, DatatypeError> {
     let mut bytes: [u8; 16] = [0; 16];
     if let Ok(_) = stream.read_exact(&mut bytes[..]) {
         Ok(UUID::from(&bytes))
     } else {
-        Err("Could not read bytes from stream.")
+        Err(DatatypeError::ReadError)
     }
 }
 

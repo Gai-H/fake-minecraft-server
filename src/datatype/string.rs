@@ -1,5 +1,5 @@
 use std::io::Read;
-use crate::datatype::varint;
+use crate::datatype::{DatatypeError, varint};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct String {
@@ -27,26 +27,24 @@ impl Into<Vec<u8>> for String {
     }
 }
 
-pub fn read_from_stream(stream: &mut impl Read) -> Result<String, std::string::String> {
+pub fn read_from_stream(stream: &mut impl Read) -> Result<String, DatatypeError> {
     let length = varint::read_from_stream(stream).unwrap();
     if length.value > String::MAX_LENGTH {
-        return Err("String length is too long.".to_string());
+        return Err(DatatypeError::TooLongStringError);
     }
 
     let mut bytes: Vec<u8> = Vec::new();
     let mut byte = [0; 1];
     for _ in 0..length.value {
-        if let Ok(_) = stream.read_exact(&mut byte[..]) {
-            bytes.push(byte[0]);
-        } else {
-            return Err("Could not read bytes from stream.".to_string());
+        match stream.read_exact(&mut byte[..]) {
+            Ok(_) => bytes.push(byte[0]),
+            Err(_) => return Err(DatatypeError::ReadError)
         }
     }
 
-    return if let Ok(s) = std::string::String::from_utf8(bytes) {
-        Ok(String { value: s })
-    } else {
-        Err("Could not convert bytes to string.".to_string())
+    return match std::string::String::from_utf8(bytes) {
+        Ok(s) => Ok(String { value: s}),
+        Err(_) => Err(DatatypeError::ConvertError)
     }
 }
 

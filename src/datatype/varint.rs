@@ -1,5 +1,6 @@
 use std::io::Read;
 use std::result::Result;
+use crate::datatype::DatatypeError;
 
 #[derive(Debug, Clone)]
 pub struct VarInt {
@@ -54,14 +55,14 @@ impl Into<Vec<u8>> for VarInt {
     }
 }
 
-pub fn read_from_stream(stream: &mut impl Read) -> Result<VarInt, std::string::String> {
+pub fn read_from_stream(stream: &mut impl Read) -> Result<VarInt, DatatypeError> {
     let mut varint_bytes: Vec<u8> = Vec::new();
     let mut byte = [0; 1];
     loop {
         if let Ok(_) = stream.read_exact(&mut byte[..]) {
             varint_bytes.push(byte[0]);
         } else {
-            return Err("Could not read bytes from stream.".to_string());
+            return Err(DatatypeError::ReadError);
         }
 
         if byte[0] & VarInt::CONTINUE_BIT == 0 {
