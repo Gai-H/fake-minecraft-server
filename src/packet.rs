@@ -9,6 +9,8 @@ pub mod c2s_status_request;
 pub mod s2c_status_response;
 pub mod c2s_ping_request;
 pub mod s2c_ping_response;
+pub mod c2s_login_start;
+pub mod s2c_encryption_request;
 
 #[derive(Debug)]
 pub struct PacketHeader {
@@ -71,7 +73,16 @@ pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &Session, h
             }
         },
         SessionState::LOGIN => {
-            Err("Not implemented.".to_string())
+            match header.id {
+                // 0x00
+                c2s_login_start::C2SLoginStartPacket::PACKET_ID => {
+                    let packet = c2s_login_start::C2SLoginStartPacket::read_from_stream(stream).unwrap();
+                    Ok(packet)
+                },
+                _ => {
+                    Err(format!("Invalid packet id {}", header.id))
+                }
+            }
         }
     }
 }
