@@ -44,15 +44,15 @@ fn handle_connection(mut stream: TcpStream) {
         };
         dbg!(&body);
 
-        // handle
-        match body.handle(&mut session, &mut stream) {
+        // update session and respond
+        body.update_session(&mut session);
+        match body.respond(&mut session, &mut stream) {
             Ok(_) => {},
             Err(e) => {
                 eprintln!("{}", e);
                 return
             }
         };
-        body.update_session(&mut session);
 
         // terminate
         if session.next_packet_ids.len() == 0 {

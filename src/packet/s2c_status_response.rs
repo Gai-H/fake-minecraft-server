@@ -20,10 +20,6 @@ impl S2CStatusResponsePacket {
 impl PacketBody for S2CStatusResponsePacket {
     fn update_session(&self, _: &mut crate::session::Session) {
     }
-
-    fn handle(&self, _: &mut crate::session::Session, _: &mut std::net::TcpStream) -> Result<(), String> {
-        Ok(())
-    }
 }
 
 impl ClientBoundPacketBody for S2CStatusResponsePacket {

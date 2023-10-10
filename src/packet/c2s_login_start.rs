@@ -23,19 +23,10 @@ impl PacketBody for C2SLoginStartPacket {
         session.uuid = Some(self.uuid.value.clone());
         session.next_packet_ids = &Self::NEXT_PACKET_IDS;
     }
-
-    fn handle(&self, session: &mut Session, stream: &mut TcpStream) -> Result<(), String> {
-        let response_packet = S2CEncryptionRequest::new()?;
-
-        response_packet.handle(session, stream)?;
-        response_packet.update_session(session);
-
-        response_packet.write_to_stream(stream)
-    }
 }
 
 impl ServerBoundPacketBody for C2SLoginStartPacket {
-    fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn PacketBody>, String> {
+    fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, String> {
         let name = string::read_from_stream(stream).unwrap();
 
         let uuid = uuid::read_from_stream(stream).unwrap();
@@ -44,5 +35,13 @@ impl ServerBoundPacketBody for C2SLoginStartPacket {
             name,
             uuid
         }))
+    }
+
+    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> Result<(), String> {
+        let response_packet = S2CEncryptionRequest::new()?;
+
+        response_packet.update_session(session);
+
+        response_packet.write_to_stream(stream)
     }
 }

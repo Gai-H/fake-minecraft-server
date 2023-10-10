@@ -30,18 +30,19 @@ pub fn read_packet_header_from_stream(stream: &mut TcpStream) -> Result<PacketHe
 
 pub trait PacketBody: Debug {
     fn update_session(&self, session: &mut Session);
-    fn handle(&self, session: &mut Session, stream: &mut TcpStream) -> Result<(), String>;
 }
 
 pub trait ServerBoundPacketBody: PacketBody {
-    fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn PacketBody>, std::string::String>;
+    fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> where Self: Sized;
+
+    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> Result<(), String>;
 }
 
 pub trait ClientBoundPacketBody: PacketBody {
     fn write_to_stream(&self, stream: &mut impl Write) -> Result<(), std::string::String>;
 }
 
-pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &Session, header: &PacketHeader) -> Result<Box<dyn PacketBody>, std::string::String> {
+pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &Session, header: &PacketHeader) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
     return match session.state {
         SessionState::HANDSHAKING => {
             match header.id {

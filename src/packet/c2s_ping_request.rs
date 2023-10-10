@@ -20,19 +20,19 @@ impl PacketBody for C2SPingRequestPacket {
     fn update_session(&self, session: &mut Session) {
         session.next_packet_ids = &C2SPingRequestPacket::NEXT_PACKET_IDS;
     }
-
-    fn handle(&self, _: &mut Session, stream: &mut TcpStream) -> Result<(), std::string::String> {
-        let response_packet = S2CPingResponsePacket::new(self.payload.clone());
-        response_packet.write_to_stream(stream)
-    }
 }
 
 impl ServerBoundPacketBody for C2SPingRequestPacket {
-    fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn PacketBody>, std::string::String> {
+    fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
         let value = long::read_from_stream(stream).unwrap();
 
         Ok(Box::new(C2SPingRequestPacket {
             payload: value
         }))
+    }
+
+    fn respond(&self, _: &mut Session, stream: &mut TcpStream) -> Result<(), std::string::String> {
+        let response_packet = S2CPingResponsePacket::new(self.payload.clone());
+        response_packet.write_to_stream(stream)
     }
 }

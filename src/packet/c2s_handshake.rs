@@ -38,14 +38,10 @@ impl PacketBody for C2SHandshakePacket {
             _ => unreachable!()
         }
     }
-
-    fn handle(&self, _: &mut Session, _: &mut TcpStream) -> Result<(), std::string::String> {
-        Ok(())
-    }
 }
 
 impl ServerBoundPacketBody for C2SHandshakePacket {
-    fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn PacketBody>, std::string::String> {
+    fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
         let protocol_version = varint::read_from_stream(stream).unwrap();
 
         let server_address = string::read_from_stream(stream).unwrap();
@@ -63,5 +59,8 @@ impl ServerBoundPacketBody for C2SHandshakePacket {
             server_port,
             next_state
         }))
+    }
+    fn respond(&self, _: &mut Session, _: &mut TcpStream) -> Result<(), std::string::String> {
+        Ok(())
     }
 }

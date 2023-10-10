@@ -1,6 +1,5 @@
 use std::fmt::Debug;
 use std::io::Write;
-use std::net::TcpStream;
 use crate::datatype::{string, varint};
 use crate::packet::{ClientBoundPacketBody, PacketBody};
 use crate::session::Session;
@@ -56,10 +55,6 @@ impl PacketBody for S2CEncryptionRequest {
     fn update_session(&self, session: &mut Session) {
         session.rsa = Some(self.rsa.clone());
         session.verify_token = Some(self.verify_token.clone());
-    }
-
-    fn handle(&self, _: &mut Session, _: &mut TcpStream) -> Result<(), String> {
-        Ok(())
     }
 }
 

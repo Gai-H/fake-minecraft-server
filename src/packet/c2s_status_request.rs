@@ -18,16 +18,16 @@ impl PacketBody for C2SStatusRequestPacket {
     fn update_session(&self, session: &mut Session) {
         session.next_packet_ids = &C2SStatusRequestPacket::NEXT_PACKET_IDS;
     }
-
-    fn handle(&self, _: &mut Session, stream: &mut TcpStream) -> Result<(), String> {
-        let response_packet = S2CStatusResponsePacket::new();
-        response_packet.write_to_stream(stream)
-    }
 }
 
 impl ServerBoundPacketBody for C2SStatusRequestPacket {
-    fn read_from_stream(_: &mut impl Read) -> Result<Box<dyn PacketBody>, std::string::String> {
+    fn read_from_stream(_: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
         Ok(Box::new(C2SStatusRequestPacket {
         }))
+    }
+
+    fn respond(&self, _: &mut Session, stream: &mut TcpStream) -> Result<(), String> {
+        let response_packet = S2CStatusResponsePacket::new();
+        response_packet.write_to_stream(stream)
     }
 }

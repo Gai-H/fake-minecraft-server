@@ -1,6 +1,5 @@
 use std::fmt::Debug;
 use std::io::Write;
-use std::net::TcpStream;
 use crate::datatype::{long, varint};
 use crate::packet::{ClientBoundPacketBody, PacketBody};
 use crate::session::Session;
@@ -22,10 +21,6 @@ impl S2CPingResponsePacket {
 
 impl PacketBody for S2CPingResponsePacket {
     fn update_session(&self, _: &mut Session) {
-    }
-
-    fn handle(&self, _: &mut Session, _: &mut TcpStream) -> Result<(), std::string::String> {
-        Ok(())
     }
 }
 
