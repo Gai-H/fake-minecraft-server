@@ -25,7 +25,7 @@ impl PacketBody for S2CPingResponsePacket {
 }
 
 impl ClientBoundPacketBody for S2CPingResponsePacket {
-    fn write_to_stream(&self, stream: &mut impl Write) -> Result<(), std::string::String> {
+    fn write_to_stream(&self, _: &mut Session, stream: &mut impl Write) -> Result<(), std::string::String> {
         let packet_id_bytes: Vec<u8> = varint::VarInt::from(S2CPingResponsePacket::PACKET_ID).into();
 
         let value_bytes: Vec<u8> = self.payload.clone().into();

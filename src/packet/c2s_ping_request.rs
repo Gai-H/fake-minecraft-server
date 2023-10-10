@@ -31,8 +31,8 @@ impl ServerBoundPacketBody for C2SPingRequestPacket {
         }))
     }
 
-    fn respond(&self, _: &mut Session, stream: &mut TcpStream) -> Result<(), std::string::String> {
+    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> Result<(), std::string::String> {
         let response_packet = S2CPingResponsePacket::new(self.payload.clone());
-        response_packet.write_to_stream(stream)
+        response_packet.write_to_stream(session, stream)
     }
 }

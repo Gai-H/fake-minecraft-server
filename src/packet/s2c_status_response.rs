@@ -1,6 +1,7 @@
 use std::io::Write;
 use crate::datatype::{string, varint};
 use crate::packet::{ClientBoundPacketBody, PacketBody};
+use crate::session::Session;
 
 #[derive(Debug)]
 pub struct S2CStatusResponsePacket {
@@ -23,7 +24,7 @@ impl PacketBody for S2CStatusResponsePacket {
 }
 
 impl ClientBoundPacketBody for S2CStatusResponsePacket {
-    fn write_to_stream(&self, stream: &mut impl Write) -> Result<(), String> {
+    fn write_to_stream(&self, _: &mut Session, stream: &mut impl Write) -> Result<(), std::string::String> {
         let packet_id_bytes: Vec<u8> = varint::VarInt::from(S2CStatusResponsePacket::PACKET_ID).into();
 
         let response_json_bytes: Vec<u8> = string::String::from(S2CStatusResponsePacket::RESPONSE_JSON).into();

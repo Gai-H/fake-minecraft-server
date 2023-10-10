@@ -59,7 +59,7 @@ impl PacketBody for S2CEncryptionRequest {
 }
 
 impl ClientBoundPacketBody for S2CEncryptionRequest {
-    fn write_to_stream(&self, stream: &mut impl Write) -> Result<(), std::string::String> {
+    fn write_to_stream(&self, _: &mut Session, stream: &mut impl Write) -> Result<(), std::string::String> {
         let packet_id_bytes: Vec<u8> = varint::VarInt::from(S2CEncryptionRequest::PACKET_ID).into();
 
         let server_id_bytes: Vec<u8> = self.server_id.clone().into();

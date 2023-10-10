@@ -42,6 +42,6 @@ impl ServerBoundPacketBody for C2SLoginStartPacket {
 
         response_packet.update_session(session);
 
-        response_packet.write_to_stream(stream)
+        response_packet.write_to_stream(session, stream)
     }
 }

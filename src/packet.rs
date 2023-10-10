@@ -40,7 +40,7 @@ pub trait ServerBoundPacketBody: PacketBody {
 }
 
 pub trait ClientBoundPacketBody: PacketBody {
-    fn write_to_stream(&self, stream: &mut impl Write) -> Result<(), std::string::String>;
+    fn write_to_stream(&self, session: &mut Session, stream: &mut impl Write) -> Result<(), std::string::String>;
 }
 
 pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &mut Session, header: &PacketHeader) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {

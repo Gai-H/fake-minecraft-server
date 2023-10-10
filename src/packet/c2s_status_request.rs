@@ -26,8 +26,8 @@ impl ServerBoundPacketBody for C2SStatusRequestPacket {
         }))
     }
 
-    fn respond(&self, _: &mut Session, stream: &mut TcpStream) -> Result<(), String> {
+    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> Result<(), String> {
         let response_packet = S2CStatusResponsePacket::new();
-        response_packet.write_to_stream(stream)
+        response_packet.write_to_stream(session, stream)
     }
 }
