@@ -35,7 +35,7 @@ fn handle_connection(mut stream: TcpStream) {
         dbg!(&header);
 
         // read body
-        let body = match packet::read_packet_body_from_stream(&mut stream, &session, &header) {
+        let body = match packet::read_packet_body_from_stream(&mut stream, &mut session, &header) {
             Ok(b) => b,
             Err(e) => {
                 eprintln!("{}", e);

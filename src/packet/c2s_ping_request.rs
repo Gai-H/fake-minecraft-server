@@ -23,7 +23,7 @@ impl PacketBody for C2SPingRequestPacket {
 }
 
 impl ServerBoundPacketBody for C2SPingRequestPacket {
-    fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
+    fn read_from_stream(_: &mut Session, stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
         let value = long::read_from_stream(stream).unwrap();
 
         Ok(Box::new(C2SPingRequestPacket {

@@ -26,7 +26,7 @@ impl PacketBody for C2SLoginStartPacket {
 }
 
 impl ServerBoundPacketBody for C2SLoginStartPacket {
-    fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, String> {
+    fn read_from_stream(_: &mut Session, stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
         let name = string::read_from_stream(stream).unwrap();
 
         let uuid = uuid::read_from_stream(stream).unwrap();

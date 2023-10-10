@@ -41,7 +41,7 @@ impl PacketBody for C2SHandshakePacket {
 }
 
 impl ServerBoundPacketBody for C2SHandshakePacket {
-    fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
+    fn read_from_stream(_: &mut Session, stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
         let protocol_version = varint::read_from_stream(stream).unwrap();
 
         let server_address = string::read_from_stream(stream).unwrap();

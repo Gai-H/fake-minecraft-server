@@ -33,7 +33,7 @@ pub trait PacketBody: Debug {
 }
 
 pub trait ServerBoundPacketBody: PacketBody {
-    fn read_from_stream(stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> where Self: Sized;
+    fn read_from_stream(session: &mut Session, stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> where Self: Sized;
 
     fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> Result<(), String>;
 }
@@ -42,13 +42,13 @@ pub trait ClientBoundPacketBody: PacketBody {
     fn write_to_stream(&self, stream: &mut impl Write) -> Result<(), std::string::String>;
 }
 
-pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &Session, header: &PacketHeader) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
+pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &mut Session, header: &PacketHeader) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
     return match session.state {
         SessionState::HANDSHAKING => {
             match header.id {
                 // 0x00
                 c2s_handshake::C2SHandshakePacket::PACKET_ID => {
-                    let packet = c2s_handshake::C2SHandshakePacket::read_from_stream(stream).unwrap();
+                    let packet = c2s_handshake::C2SHandshakePacket::read_from_stream(session, stream).unwrap();
                     Ok(packet)
                 },
                 _ => {
@@ -60,12 +60,12 @@ pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &Session, h
             match header.id {
                 // 0x00
                 c2s_status_request::C2SStatusRequestPacket::PACKET_ID => {
-                    let packet = c2s_status_request::C2SStatusRequestPacket::read_from_stream(stream).unwrap();
+                    let packet = c2s_status_request::C2SStatusRequestPacket::read_from_stream(session, stream).unwrap();
                     Ok(packet)
                 },
                 // 0x01
                 c2s_ping_request::C2SPingRequestPacket::PACKET_ID => {
-                    let packet = c2s_ping_request::C2SPingRequestPacket::read_from_stream(stream).unwrap();
+                    let packet = c2s_ping_request::C2SPingRequestPacket::read_from_stream(session, stream).unwrap();
                     Ok(packet)
                 },
                 _ => {
@@ -77,7 +77,7 @@ pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &Session, h
             match header.id {
                 // 0x00
                 c2s_login_start::C2SLoginStartPacket::PACKET_ID => {
-                    let packet = c2s_login_start::C2SLoginStartPacket::read_from_stream(stream).unwrap();
+                    let packet = c2s_login_start::C2SLoginStartPacket::read_from_stream(session, stream).unwrap();
                     Ok(packet)
                 },
                 _ => {

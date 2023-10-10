@@ -21,7 +21,7 @@ impl PacketBody for C2SStatusRequestPacket {
 }
 
 impl ServerBoundPacketBody for C2SStatusRequestPacket {
-    fn read_from_stream(_: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
+    fn read_from_stream(_: &mut Session, _: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
         Ok(Box::new(C2SStatusRequestPacket {
         }))
     }
