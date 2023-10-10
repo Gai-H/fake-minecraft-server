@@ -1,7 +1,7 @@
 use std::io::Read;
 use std::result::Result;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct VarInt {
     pub value: i32
 }

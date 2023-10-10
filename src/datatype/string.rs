@@ -1,7 +1,7 @@
 use std::io::Read;
 use crate::datatype::varint;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct String {
     pub value: std::string::String
 }
