@@ -2,7 +2,7 @@ use std::io::Read;
 use std::net::TcpStream;
 use openssl::rsa::Padding;
 use crate::datatype::varint;
-use crate::packet::{PacketBody, ServerBoundPacketBody};
+use crate::packet::{ClientBoundPacketBody, PacketBody, s2c_disconnect, ServerBoundPacketBody};
 use crate::session::Session;
 
 #[derive(Debug)]
@@ -72,6 +72,9 @@ impl ServerBoundPacketBody for C2SEncryptionResponse {
     }
 
     fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> Result<(), String> {
+        let response_packet = s2c_disconnect::S2CDisconnectPacket::new();
+        response_packet.write_to_stream(session, stream)?;
+        response_packet.update_session(session);
         Ok(())
     }
 }

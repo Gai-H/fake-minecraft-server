@@ -12,6 +12,7 @@ pub mod s2c_ping_response;
 pub mod c2s_login_start;
 pub mod s2c_encryption_request;
 pub mod c2s_encryption_response;
+pub mod s2c_disconnect;
 
 #[derive(Debug)]
 pub struct PacketHeader {
