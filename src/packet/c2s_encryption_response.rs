@@ -18,11 +18,20 @@ impl C2SEncryptionResponse {
 
     const NEXT_PACKET_IDS: [i32; 0] = []; // terminate connection
 
-    fn decrypt_byte_array(session: &mut Session, from: &[u8], to: &mut [u8]) -> Result<(), std::string::String> {
-        if let Err(e) = session.rsa.as_ref().unwrap().private_decrypt(from, to, Padding::PKCS1) {
+    fn read_byte_array(stream: &mut impl Read, length: usize) -> Result<Vec<u8>, std::string::String> {
+        let mut array: Vec<u8> = vec![0; length];
+        if let Err(e) = stream.read_exact(&mut array) {
+            return Err(format!("Could not read byte array: {}", e));
+        }
+        Ok(array)
+    }
+
+    fn decrypt_byte_array(session: &mut Session, from: &[u8]) -> Result<Vec<u8>, std::string::String> {
+        let mut to: Vec<u8> = vec![0; 128];
+        if let Err(e) = session.rsa.as_ref().unwrap().private_decrypt(from, &mut to, Padding::PKCS1) {
             return Err(format!("Could not decrypt byte array: {}", e));
         }
-        Ok(())
+        Ok(to)
     }
 }
 
@@ -36,25 +45,17 @@ impl PacketBody for C2SEncryptionResponse {
 impl ServerBoundPacketBody for C2SEncryptionResponse {
     fn read_from_stream(session: &mut Session, stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
         let shared_secret_length = varint::read_from_stream(stream).unwrap();
-        let mut shared_secret: Vec<u8> = vec![0; shared_secret_length.value as usize];
-        if let Err(e) = stream.read_exact(&mut shared_secret) {
-            return Err(format!("Failed to read shared secret: {}", e));
-        };
+        let shared_secret: Vec<u8> = Self::read_byte_array(stream, shared_secret_length.value as usize)?;
 
         let verify_token_length = varint::read_from_stream(stream).unwrap();
-        let mut verify_token: Vec<u8> = vec![0; verify_token_length.value as usize];
-        if let Err(e) = stream.read_exact(&mut verify_token) {
-            return Err(format!("Failed to read verify token: {}", e));
-        };
+        let verify_token: Vec<u8> = Self::read_byte_array(stream, verify_token_length.value as usize)?;
 
         // decrypt shared secret
-        let mut decrypted_shared_secret: Vec<u8> = vec![0; 128];
-        Self::decrypt_byte_array(session, &shared_secret, &mut decrypted_shared_secret)?;
+        let mut decrypted_shared_secret: Vec<u8> = Self::decrypt_byte_array(session, &shared_secret)?;
         decrypted_shared_secret.resize(16, 0);
 
         // decrypt verify token
-        let mut decrypted_verify_token: Vec<u8> = vec![0; 128];
-        Self::decrypt_byte_array(session, &verify_token, &mut decrypted_verify_token)?;
+        let mut decrypted_verify_token: Vec<u8> = Self::decrypt_byte_array(session, &verify_token)?;
         decrypted_verify_token.resize(4, 0);
 
         // check verify token
