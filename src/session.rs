@@ -17,7 +17,8 @@ pub struct Session {
     pub username: Option<String>,
     pub uuid: Option<u128>,
     pub rsa: Option<openssl::rsa::Rsa<openssl::pkey::Private>>,
-    pub verify_token: Option<Vec<u8>>
+    pub verify_token: Option<Vec<u8>>,
+    pub shared_secret: Option<Vec<u8>>
 }
 
 impl Session {
@@ -33,7 +34,8 @@ impl Session {
             username: None,
             uuid: None,
             rsa: None,
-            verify_token: None
+            verify_token: None,
+            shared_secret: None
         }
     }
 }

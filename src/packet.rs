@@ -11,6 +11,7 @@ pub mod c2s_ping_request;
 pub mod s2c_ping_response;
 pub mod c2s_login_start;
 pub mod s2c_encryption_request;
+pub mod c2s_encryption_response;
 
 #[derive(Debug)]
 pub struct PacketHeader {
@@ -78,6 +79,11 @@ pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &mut Sessio
                 // 0x00
                 c2s_login_start::C2SLoginStartPacket::PACKET_ID => {
                     let packet = c2s_login_start::C2SLoginStartPacket::read_from_stream(session, stream).unwrap();
+                    Ok(packet)
+                },
+                //0x01
+                c2s_encryption_response::C2SEncryptionResponse::PACKET_ID => {
+                    let packet = c2s_encryption_response::C2SEncryptionResponse::read_from_stream(session, stream).unwrap();
                     Ok(packet)
                 },
                 _ => {
