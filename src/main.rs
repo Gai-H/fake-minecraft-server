@@ -2,6 +2,7 @@ mod datatype;
 mod packet;
 mod session;
 
+use std::error;
 use std::net::{TcpListener, TcpStream};
 use crate::session::Session;
 
@@ -11,52 +12,33 @@ fn main() {
     for stream in listener.incoming() {
         let stream = stream.unwrap();
 
-        handle_connection(stream);
+        if let Err(e) = handle_connection(stream) {
+            eprintln!("{}", e)
+        }
     }
 }
 
-fn handle_connection(mut stream: TcpStream) {
+fn handle_connection(mut stream: TcpStream) -> Result<(), Box<dyn error::Error>> {
     let mut session = Session::new();
 
     loop {
         dbg!(&session);
         // read header
-        let header = match packet::read_packet_header_from_stream(&mut stream) {
-            Ok(h) => h,
-            Err(e) => {
-                eprintln!("{}", e);
-                return
-            }
-        };
-        if !session.next_packet_ids.contains(&header.id) {
-            eprintln!("Invalid packet order {}", header.id);
-            return
-        }
+        let header = packet::read_packet_header_from_stream(&mut session, &mut stream)?;
         dbg!(&header);
 
         // read body
-        let body = match packet::read_packet_body_from_stream(&mut stream, &mut session, &header) {
-            Ok(b) => b,
-            Err(e) => {
-                eprintln!("{}", e);
-                return
-            }
-        };
+        let body = packet::read_packet_body_from_stream(&mut stream, &mut session, &header)?;
         dbg!(&body);
 
         // update session and respond
         body.update_session(&mut session);
-        match body.respond(&mut session, &mut stream) {
-            Ok(_) => {},
-            Err(e) => {
-                eprintln!("{}", e);
-                return
-            }
-        };
+        body.respond(&mut session, &mut stream)?;
 
         // terminate
         if session.next_packet_ids.len() == 0 {
             break
         }
     }
+    Ok(())
 }

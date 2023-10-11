@@ -23,9 +23,13 @@ pub struct PacketHeader {
     pub id: i32
 }
 
-pub fn read_packet_header_from_stream(stream: &mut TcpStream) -> Result<PacketHeader> {
+pub fn read_packet_header_from_stream(session: &mut Session, stream: &mut TcpStream) -> Result<PacketHeader> {
     let packet_length = varint::read_from_stream(stream)?;
     let packet_id = varint::read_from_stream(stream)?;
+
+    if !session.next_packet_ids.contains(&packet_id.value) {
+        return Err(PacketError::SequenceError(format!("Invalid packet order: {}", packet_id.value)).into());
+    }
 
     Ok(PacketHeader {
         length: packet_length.value,
