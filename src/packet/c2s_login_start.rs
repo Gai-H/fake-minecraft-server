@@ -1,6 +1,7 @@
 use std::io::Read;
 use std::net::TcpStream;
 use crate::datatype::{string, uuid};
+use crate::packet;
 use crate::packet::{ClientBoundPacketBody, PacketBody, ServerBoundPacketBody};
 use crate::packet::s2c_encryption_request::S2CEncryptionRequest;
 use crate::session::Session;
@@ -26,10 +27,10 @@ impl PacketBody for C2SLoginStartPacket {
 }
 
 impl ServerBoundPacketBody for C2SLoginStartPacket {
-    fn read_from_stream(_: &mut Session, stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
-        let name = string::read_from_stream(stream).unwrap();
+    fn read_from_stream(_: &mut Session, stream: &mut impl Read) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
+        let name = string::read_from_stream(stream)?;
 
-        let uuid = uuid::read_from_stream(stream).unwrap();
+        let uuid = uuid::read_from_stream(stream)?;
 
         Ok(Box::new(C2SLoginStartPacket {
             name,
@@ -37,11 +38,11 @@ impl ServerBoundPacketBody for C2SLoginStartPacket {
         }))
     }
 
-    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> Result<(), String> {
+    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> packet::Result<()> {
         let response_packet = S2CEncryptionRequest::new()?;
 
         response_packet.update_session(session);
 
-        response_packet.write_to_stream(session, stream)
+        response_packet.write_to_stream(session, stream).into()
     }
 }

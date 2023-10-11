@@ -1,6 +1,7 @@
 use std::io::Read;
 use std::net::TcpStream;
 use crate::datatype::long;
+use crate::packet;
 use crate::packet::{ClientBoundPacketBody, PacketBody, ServerBoundPacketBody};
 use crate::packet::s2c_ping_response::S2CPingResponsePacket;
 use crate::session::Session;
@@ -23,16 +24,16 @@ impl PacketBody for C2SPingRequestPacket {
 }
 
 impl ServerBoundPacketBody for C2SPingRequestPacket {
-    fn read_from_stream(_: &mut Session, stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
-        let value = long::read_from_stream(stream).unwrap();
+    fn read_from_stream(_: &mut Session, stream: &mut impl Read) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
+        let value = long::read_from_stream(stream)?;
 
         Ok(Box::new(C2SPingRequestPacket {
             payload: value
         }))
     }
 
-    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> Result<(), std::string::String> {
+    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> packet::Result<()> {
         let response_packet = S2CPingResponsePacket::new(self.payload.clone());
-        response_packet.write_to_stream(session, stream)
+        response_packet.write_to_stream(session, stream).into()
     }
 }

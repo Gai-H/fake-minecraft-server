@@ -3,7 +3,8 @@ use std::io::Read;
 use std::net::TcpStream;
 use crate::session::{Session, SessionState};
 use crate::datatype::{string, varint, unsigned_short};
-use crate::packet::{PacketBody, ServerBoundPacketBody};
+use crate::packet;
+use crate::packet::{PacketBody, PacketError, ServerBoundPacketBody};
 
 #[derive(Debug)]
 pub struct C2SHandshakePacket {
@@ -41,16 +42,16 @@ impl PacketBody for C2SHandshakePacket {
 }
 
 impl ServerBoundPacketBody for C2SHandshakePacket {
-    fn read_from_stream(_: &mut Session, stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
-        let protocol_version = varint::read_from_stream(stream).unwrap();
+    fn read_from_stream(_: &mut Session, stream: &mut impl Read) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
+        let protocol_version = varint::read_from_stream(stream)?;
 
-        let server_address = string::read_from_stream(stream).unwrap();
+        let server_address = string::read_from_stream(stream)?;
 
-        let server_port = unsigned_short::read_from_stream(stream).unwrap();
+        let server_port = unsigned_short::read_from_stream(stream)?;
 
-        let next_state = varint::read_from_stream(stream).unwrap();
+        let next_state = varint::read_from_stream(stream)?;
         if next_state.value != 1 && next_state.value != 2 {
-            return Err(format!("Invalid next state for C2SHandshakePacket: {}", next_state.value));
+            return Err(PacketError::SequenceError(format!("Invalid next state for C2SHandshakePacket: {}", next_state.value)).into())
         }
 
         Ok(Box::new(C2SHandshakePacket {
@@ -60,7 +61,7 @@ impl ServerBoundPacketBody for C2SHandshakePacket {
             next_state
         }))
     }
-    fn respond(&self, _: &mut Session, _: &mut TcpStream) -> Result<(), std::string::String> {
+    fn respond(&self, _: &mut Session, _: &mut TcpStream) -> packet::Result<()> {
         Ok(())
     }
 }

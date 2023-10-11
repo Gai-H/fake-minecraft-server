@@ -1,7 +1,8 @@
 use std::fmt::Debug;
 use std::io::Write;
 use crate::datatype::{long, varint};
-use crate::packet::{ClientBoundPacketBody, PacketBody};
+use crate::packet;
+use crate::packet::{ClientBoundPacketBody, PacketBody, PacketError};
 use crate::session::Session;
 
 #[derive(Debug)]
@@ -25,22 +26,22 @@ impl PacketBody for S2CPingResponsePacket {
 }
 
 impl ClientBoundPacketBody for S2CPingResponsePacket {
-    fn write_to_stream(&self, _: &mut Session, stream: &mut impl Write) -> Result<(), std::string::String> {
+    fn write_to_stream(&self, _: &mut Session, stream: &mut impl Write) -> packet::Result<()> {
         let packet_id_bytes: Vec<u8> = varint::VarInt::from(S2CPingResponsePacket::PACKET_ID).into();
 
         let value_bytes: Vec<u8> = self.payload.clone().into();
 
-        let packet_length: i32 = packet_id_bytes.len() as i32 + value_bytes.len() as i32;
-        let packet_length_bytes: Vec<u8> = varint::VarInt::from(packet_length).into();
+        let packet_length: usize = packet_id_bytes.len() + value_bytes.len();
+        let packet_length_bytes: Vec<u8> = varint::VarInt::from(packet_length as i32).into();
 
         let bytes: Vec<u8> = [&packet_length_bytes[..], &packet_id_bytes[..], &value_bytes[..]].concat();
 
         if stream.write_all(&bytes).is_err() {
-            return Err("Could not write packet to stream.".to_string());
+            return Err(PacketError::WriteError.into());
         }
 
         if stream.flush().is_err() {
-            return Err("Could not flush stream.".to_string());
+            return Err(PacketError::FlushError.into());
         }
 
         Ok(())

@@ -1,6 +1,7 @@
 use std::io::Write;
 use crate::datatype::{string, varint};
-use crate::packet::{ClientBoundPacketBody, PacketBody};
+use crate::packet;
+use crate::packet::{ClientBoundPacketBody, PacketBody, PacketError};
 use crate::session::Session;
 
 #[derive(Debug)]
@@ -24,12 +25,12 @@ impl PacketBody for S2CDisconnectPacket {
 }
 
 impl ClientBoundPacketBody for S2CDisconnectPacket {
-    fn write_to_stream(&self, session: &mut Session, stream: &mut impl Write) -> Result<(), std::string::String> {
+    fn write_to_stream(&self, session: &mut Session, stream: &mut impl Write) -> packet::Result<()> {
         let packet_id_bytes: Vec<u8> = varint::VarInt::from(S2CDisconnectPacket::PACKET_ID).into();
         let reason_bytes: Vec<u8> = string::String::from(S2CDisconnectPacket::REASON_JSON).into();
 
-        let packet_length: i32 = packet_id_bytes.len() as i32 + reason_bytes.len() as i32;
-        let packet_length_bytes: Vec<u8> = varint::VarInt::from(packet_length).into();
+        let packet_length: usize = packet_id_bytes.len() + reason_bytes.len();
+        let packet_length_bytes: Vec<u8> = varint::VarInt::from(packet_length as i32).into();
 
         let bytes: Vec<u8> = [&packet_length_bytes[..], &packet_id_bytes[..], &reason_bytes[..]].concat();
 
@@ -39,23 +40,22 @@ impl ClientBoundPacketBody for S2CDisconnectPacket {
                 ctx
             },
             Err(e) => {
-                return Err(format!("Could not create CipherCtx instance: {}", e));
+                return Err(PacketError::EncryptionError(format!("Could not create CipherCtx instance: {}", e)).into());
             }
         };
         if let Err(e) = ctx.encrypt_init(Some(openssl::cipher::Cipher::aes_128_cfb8()), Some(session.shared_secret.as_ref().unwrap()), Some(session.shared_secret.as_ref().unwrap())) {
-            return Err(format!("Could not initialize CipherCtx instance: {}", e));
+            return Err(PacketError::EncryptionError(format!("Could not initialize CipherCtx instance: {}", e)).into());
         }
         let mut encrypted_bytes: Vec<u8> = vec![];
-        if ctx.cipher_update_vec(&bytes, &mut encrypted_bytes).is_err() || ctx.cipher_final_vec(&mut encrypted_bytes).is_err() {
-            return Err("Could not write encrypted bytes. ".to_string());
-        }
-
-        if stream.write_all(&encrypted_bytes).is_err() {
-            return Err("Could not write packet to stream.".to_string());
+        if  ctx.cipher_update_vec(&bytes, &mut encrypted_bytes).is_err() ||
+            ctx.cipher_final_vec(&mut encrypted_bytes).is_err() ||
+            stream.write_all(&encrypted_bytes).is_err()
+        {
+            return Err(PacketError::WriteError.into());
         }
 
         if stream.flush().is_err() {
-            return Err("Could not flush stream.".to_string());
+            return Err(PacketError::FlushError.into());
         }
 
         Ok(())

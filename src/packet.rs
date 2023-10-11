@@ -1,3 +1,4 @@
+use std::{error, fmt};
 use std::fmt::Debug;
 use std::io::{Read, Write};
 use std::net::TcpStream;
@@ -14,15 +15,17 @@ pub mod s2c_encryption_request;
 pub mod c2s_encryption_response;
 pub mod s2c_disconnect;
 
+pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
+
 #[derive(Debug)]
 pub struct PacketHeader {
     pub length: i32,
     pub id: i32
 }
 
-pub fn read_packet_header_from_stream(stream: &mut TcpStream) -> Result<PacketHeader, String> {
-    let packet_length = varint::read_from_stream(stream).unwrap();
-    let packet_id = varint::read_from_stream(stream).unwrap();
+pub fn read_packet_header_from_stream(stream: &mut TcpStream) -> Result<PacketHeader> {
+    let packet_length = varint::read_from_stream(stream)?;
+    let packet_id = varint::read_from_stream(stream)?;
 
     Ok(PacketHeader {
         length: packet_length.value,
@@ -35,26 +38,26 @@ pub trait PacketBody: Debug {
 }
 
 pub trait ServerBoundPacketBody: PacketBody {
-    fn read_from_stream(session: &mut Session, stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> where Self: Sized;
+    fn read_from_stream(session: &mut Session, stream: &mut impl Read) -> Result<Box<dyn ServerBoundPacketBody>> where Self: Sized;
 
-    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> Result<(), String>;
+    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> Result<()>;
 }
 
 pub trait ClientBoundPacketBody: PacketBody {
-    fn write_to_stream(&self, session: &mut Session, stream: &mut impl Write) -> Result<(), std::string::String>;
+    fn write_to_stream(&self, session: &mut Session, stream: &mut impl Write) -> Result<()>;
 }
 
-pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &mut Session, header: &PacketHeader) -> Result<Box<dyn ServerBoundPacketBody>, std::string::String> {
+pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &mut Session, header: &PacketHeader) -> Result<Box<dyn ServerBoundPacketBody>> {
     return match session.state {
         SessionState::HANDSHAKING => {
             match header.id {
                 // 0x00
                 c2s_handshake::C2SHandshakePacket::PACKET_ID => {
-                    let packet = c2s_handshake::C2SHandshakePacket::read_from_stream(session, stream).unwrap();
+                    let packet = c2s_handshake::C2SHandshakePacket::read_from_stream(session, stream)?;
                     Ok(packet)
                 },
                 _ => {
-                    Err(format!("Invalid packet id {}", header.id))
+                    Err(PacketError::SequenceError(format!("Invalid packet id: {}", header.id)).into())
                 }
             }
         },
@@ -62,16 +65,16 @@ pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &mut Sessio
             match header.id {
                 // 0x00
                 c2s_status_request::C2SStatusRequestPacket::PACKET_ID => {
-                    let packet = c2s_status_request::C2SStatusRequestPacket::read_from_stream(session, stream).unwrap();
+                    let packet = c2s_status_request::C2SStatusRequestPacket::read_from_stream(session, stream)?;
                     Ok(packet)
                 },
                 // 0x01
                 c2s_ping_request::C2SPingRequestPacket::PACKET_ID => {
-                    let packet = c2s_ping_request::C2SPingRequestPacket::read_from_stream(session, stream).unwrap();
+                    let packet = c2s_ping_request::C2SPingRequestPacket::read_from_stream(session, stream)?;
                     Ok(packet)
                 },
                 _ => {
-                    Err(format!("Invalid packet id {}", header.id))
+                    Err(PacketError::SequenceError(format!("Invalid packet id: {}", header.id)).into())
                 }
             }
         },
@@ -79,18 +82,42 @@ pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &mut Sessio
             match header.id {
                 // 0x00
                 c2s_login_start::C2SLoginStartPacket::PACKET_ID => {
-                    let packet = c2s_login_start::C2SLoginStartPacket::read_from_stream(session, stream).unwrap();
+                    let packet = c2s_login_start::C2SLoginStartPacket::read_from_stream(session, stream)?;
                     Ok(packet)
                 },
                 //0x01
                 c2s_encryption_response::C2SEncryptionResponse::PACKET_ID => {
-                    let packet = c2s_encryption_response::C2SEncryptionResponse::read_from_stream(session, stream).unwrap();
+                    let packet = c2s_encryption_response::C2SEncryptionResponse::read_from_stream(session, stream)?;
                     Ok(packet)
                 },
                 _ => {
-                    Err(format!("Invalid packet id {}", header.id))
+                    Err(PacketError::SequenceError(format!("Invalid packet id: {}", header.id)).into())
                 }
             }
         }
     }
+}
+
+#[derive(Debug)]
+pub enum PacketError {
+    WriteError,
+    FlushError,
+    ReadError(String),
+    SequenceError(String),
+    EncryptionError(String),
+}
+
+impl fmt::Display for PacketError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PacketError::WriteError => write!(f, "Could not write packet to stream"),
+            PacketError::FlushError => write!(f, "Could not flush stream"),
+            PacketError::ReadError(s) => write!(f, "Read Error: {}", s),
+            PacketError::SequenceError(s) => write!(f, "Sequence Error: {}", s),
+            PacketError::EncryptionError(s) => write!(f, "Encryption Error: {}", s)
+        }
+    }
+}
+
+impl error::Error for PacketError {
 }

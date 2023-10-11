@@ -1,6 +1,7 @@
 use std::io::Write;
 use crate::datatype::{string, varint};
-use crate::packet::{ClientBoundPacketBody, PacketBody};
+use crate::packet;
+use crate::packet::{ClientBoundPacketBody, PacketBody, PacketError};
 use crate::session::Session;
 
 #[derive(Debug)]
@@ -19,27 +20,27 @@ impl S2CStatusResponsePacket {
 }
 
 impl PacketBody for S2CStatusResponsePacket {
-    fn update_session(&self, _: &mut crate::session::Session) {
+    fn update_session(&self, _: &mut Session) {
     }
 }
 
 impl ClientBoundPacketBody for S2CStatusResponsePacket {
-    fn write_to_stream(&self, _: &mut Session, stream: &mut impl Write) -> Result<(), std::string::String> {
+    fn write_to_stream(&self, _: &mut Session, stream: &mut impl Write) -> packet::Result<()> {
         let packet_id_bytes: Vec<u8> = varint::VarInt::from(S2CStatusResponsePacket::PACKET_ID).into();
 
         let response_json_bytes: Vec<u8> = string::String::from(S2CStatusResponsePacket::RESPONSE_JSON).into();
 
-        let packet_length: i32 = packet_id_bytes.len() as i32 + response_json_bytes.len() as i32;
-        let packet_length_bytes: Vec<u8> = varint::VarInt::from(packet_length).into();
+        let packet_length: usize = packet_id_bytes.len() + response_json_bytes.len();
+        let packet_length_bytes: Vec<u8> = varint::VarInt::from(packet_length as i32).into();
 
         let bytes: Vec<u8> = [&packet_length_bytes[..], &packet_id_bytes[..], &response_json_bytes[..]].concat();
 
         if stream.write_all(&bytes).is_err() {
-            return Err("Could not write packet to stream.".to_string());
+            return Err(PacketError::WriteError.into());
         }
 
         if stream.flush().is_err() {
-            return Err("Could not flush stream.".to_string());
+            return Err(PacketError::FlushError.into());
         }
 
         Ok(())
