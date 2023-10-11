@@ -28,7 +28,7 @@ fn handle_connection(mut stream: TcpStream) -> Result<(), Box<dyn error::Error>>
         dbg!(&header);
 
         // read body
-        let body = packet::read_packet_body_from_stream(&mut stream, &mut session, &header)?;
+        let body = packet::read_packet_body_from_stream(&mut session, &mut stream, &header)?;
         dbg!(&body);
 
         // update session and respond

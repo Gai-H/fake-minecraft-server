@@ -51,7 +51,7 @@ pub trait ClientBoundPacketBody: PacketBody {
     fn write_to_stream(&self, session: &mut Session, stream: &mut impl Write) -> Result<()>;
 }
 
-pub fn read_packet_body_from_stream(stream: &mut TcpStream, session: &mut Session, header: &PacketHeader) -> Result<Box<dyn ServerBoundPacketBody>> {
+pub fn read_packet_body_from_stream(session: &mut Session, stream: &mut TcpStream, header: &PacketHeader) -> Result<Box<dyn ServerBoundPacketBody>> {
     return match session.state {
         SessionState::HANDSHAKING => {
             match header.id {
