@@ -16,6 +16,12 @@ impl From<&str> for String {
     }
 }
 
+impl From<std::string::String> for String {
+    fn from(v: std::string::String) -> Self {
+        String { value: v }
+    }
+}
+
 impl Into<Vec<u8>> for String {
     fn into(self) -> Vec<u8> {
         let mut res: Vec<u8> = Vec::new();
