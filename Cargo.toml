@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 openssl = "0.10.57"
+lazy_static = "1.4.0"
