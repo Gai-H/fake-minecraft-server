@@ -4,10 +4,29 @@ mod session;
 
 use std::error;
 use std::net::{TcpListener, TcpStream};
+use config::Config;
+use lazy_static::lazy_static;
 use crate::session::Session;
 
+lazy_static! {
+    static ref CONFIG: Config = Config::builder()
+        .add_source(config::File::with_name("Config"))
+        .build()
+        .unwrap();
+}
+
 fn main() {
-    let listener = TcpListener::bind("127.0.0.1:25565").unwrap();
+    let port = CONFIG.get::<u16>("port").unwrap_or(25565);
+    let full_address = format!("127.0.0.1:{}", port);
+
+    let listener = match TcpListener::bind(&full_address) {
+        Ok(l) => l,
+        Err(_) => {
+            eprintln!("Could not start listening on {}.", &full_address);
+            return;
+        }
+    };
+    println!("Successfully listening on {}.", &full_address);
 
     for stream in listener.incoming() {
         let stream = stream.unwrap();

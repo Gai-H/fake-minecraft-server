@@ -1,6 +1,6 @@
 use std::io::Write;
 use crate::datatype::{string, varint};
-use crate::packet;
+use crate::{CONFIG, packet};
 use crate::packet::{ClientBoundPacketBody, PacketBody, PacketError};
 use crate::session::Session;
 
@@ -11,11 +11,17 @@ pub struct S2CDisconnectPacket {
 impl S2CDisconnectPacket {
     pub const PACKET_ID: i32 = 0x00;
 
-    const REASON_JSON: &'static str = "{\"text\": \"You are banned from this server.\nReason: Banned by an operator.\"}";
+    const DEFAULT_REASON_TEXT: &'static str = "You are banned from this server.\nReason: Banned by an operator.";
 
     pub fn new() -> S2CDisconnectPacket {
         S2CDisconnectPacket {
         }
+    }
+
+    fn get_reason_json() -> String {
+        let disconnect_reason = CONFIG.get::<String>("disconnect_reason").unwrap_or(Self::DEFAULT_REASON_TEXT.into());
+
+        format!("{{\"text\": \"{disconnect_reason}\"}}")
     }
 }
 
@@ -27,7 +33,7 @@ impl PacketBody for S2CDisconnectPacket {
 impl ClientBoundPacketBody for S2CDisconnectPacket {
     fn write_to_stream(&self, session: &mut Session, stream: &mut impl Write) -> packet::Result<()> {
         let packet_id_bytes: Vec<u8> = varint::VarInt::from(S2CDisconnectPacket::PACKET_ID).into();
-        let reason_bytes: Vec<u8> = string::String::from(S2CDisconnectPacket::REASON_JSON).into();
+        let reason_bytes: Vec<u8> = string::String::from(Self::get_reason_json()).into();
 
         let packet_length: usize = packet_id_bytes.len() + reason_bytes.len();
         let packet_length_bytes: Vec<u8> = varint::VarInt::from(packet_length as i32).into();
