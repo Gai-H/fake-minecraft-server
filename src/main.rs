@@ -4,6 +4,7 @@ mod session;
 
 use std::error;
 use std::net::{TcpListener, TcpStream};
+use std::process::Command;
 use config::Config;
 use lazy_static::lazy_static;
 use crate::session::Session;
@@ -29,36 +30,38 @@ fn main() {
     println!("Successfully listening on {}.", &full_address);
 
     for stream in listener.incoming() {
-        let stream = match stream {
+        let mut stream = match stream {
             Ok(s) => s,
             Err(e) => {
                 eprintln!("{}", e);
                 continue;
             }
         };
+        let mut session = Session::new(&stream);
 
-        if let Err(e) = handle_connection(stream) {
-            eprintln!("{}", e)
+        if let Err(e) = handle_connection(&mut session, &mut stream) {
+            eprintln!("{}", e);
+            continue;
         }
+
+        run_command(&session);
     }
 }
 
-fn handle_connection(mut stream: TcpStream) -> Result<(), Box<dyn error::Error>> {
-    let mut session = Session::new();
-
+fn handle_connection(session: &mut Session, stream: &mut TcpStream) -> Result<(), Box<dyn error::Error>> {
     loop {
         dbg!(&session);
         // read header
-        let header = packet::read_packet_header_from_stream(&mut session, &mut stream)?;
+        let header = packet::read_packet_header_from_stream(session, stream)?;
         dbg!(&header);
 
         // read body
-        let body = packet::read_packet_body_from_stream(&mut session, &mut stream, &header)?;
+        let body = packet::read_packet_body_from_stream(session, stream, &header)?;
         dbg!(&body);
 
         // update session and respond
-        body.update_session(&mut session);
-        body.respond(&mut session, &mut stream)?;
+        body.update_session(session);
+        body.respond(session, stream)?;
 
         // terminate
         if session.next_packet_ids.len() == 0 {
@@ -66,4 +69,38 @@ fn handle_connection(mut stream: TcpStream) -> Result<(), Box<dyn error::Error>>
         }
     }
     Ok(())
+}
+
+fn run_command(session: &Session) {
+    let cmd_vec = match CONFIG.get::<Vec<String>>("command") {
+        Ok(c) => c,
+        Err(_) => {
+            return;
+        }
+    };
+
+    // replace variables
+    let mut replaced_args: Vec<String> = vec![];
+    for arg in &cmd_vec[1..] {
+        let replaced_arg: String = match &arg[..] {
+            "%peer_address%" => session.peer_address.to_string(),
+            "%username%" => session.username.clone().unwrap_or("%username%".to_string()),
+            "%uuid%" => {
+                if session.uuid.is_none() {
+                    "%uuid%".into()
+                } else {
+                    format!("{:x}", session.uuid.clone().unwrap())
+                }
+            },
+            "%state%" => session.state.to_string(),
+            _ => arg.clone(),
+        };
+
+        replaced_args.push(replaced_arg);
+    }
+
+    // run
+    let out = Command::new(&cmd_vec[0]).args(replaced_args).output().expect("Failed to run command.");
+    println!("{}", String::from_utf8_lossy(&out.stdout));
+    eprintln!("{}", String::from_utf8_lossy(&out.stderr));
 }

@@ -1,3 +1,6 @@
+use std::fmt;
+use std::net::{SocketAddr, TcpStream};
+
 #[derive(Debug)]
 pub enum SessionState {
     HANDSHAKING,
@@ -7,8 +10,19 @@ pub enum SessionState {
     // PLAY
 }
 
+impl fmt::Display for SessionState {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            SessionState::HANDSHAKING => write!(f, "HANDSHAKING"),
+            SessionState::STATUS => write!(f, "STATUS"),
+            SessionState::LOGIN => write!(f, "LOGIN")
+        }
+    }
+}
+
 #[derive(Debug)]
 pub struct Session {
+    pub peer_address: SocketAddr,
     pub state: SessionState,
     pub next_packet_ids: &'static [i32],
     pub protocol_version: Option<i32>,
@@ -24,8 +38,9 @@ pub struct Session {
 impl Session {
     pub const FIRST_PACKET_IDS: [i32; 1] = [0x00]; // Handshake
 
-    pub fn new() -> Session {
+    pub fn new(stream: &TcpStream) -> Session {
         Session {
+            peer_address: stream.peer_addr().unwrap(),
             state: SessionState::HANDSHAKING,
             next_packet_ids: &Session::FIRST_PACKET_IDS,
             protocol_version: None,
