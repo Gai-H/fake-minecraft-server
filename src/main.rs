@@ -29,7 +29,13 @@ fn main() {
     println!("Successfully listening on {}.", &full_address);
 
     for stream in listener.incoming() {
-        let stream = stream.unwrap();
+        let stream = match stream {
+            Ok(s) => s,
+            Err(e) => {
+                eprintln!("{}", e);
+                continue;
+            }
+        };
 
         if let Err(e) = handle_connection(stream) {
             eprintln!("{}", e)
