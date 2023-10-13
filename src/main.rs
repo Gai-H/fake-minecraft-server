@@ -10,7 +10,7 @@ use crate::session::Session;
 
 lazy_static! {
     static ref CONFIG: Config = Config::builder()
-        .add_source(config::File::with_name("Config"))
+        .add_source(config::File::with_name("Config").required(false))
         .build()
         .unwrap();
 }
