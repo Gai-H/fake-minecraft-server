@@ -50,14 +50,11 @@ fn main() {
 
 fn handle_connection(session: &mut Session, stream: &mut TcpStream) -> Result<(), Box<dyn error::Error>> {
     loop {
-        dbg!(&session);
         // read header
         let header = packet::read_packet_header_from_stream(session, stream)?;
-        dbg!(&header);
 
         // read body
         let body = packet::read_packet_body_from_stream(session, stream, &header)?;
-        dbg!(&body);
 
         // update session and respond
         body.update_session(session);
