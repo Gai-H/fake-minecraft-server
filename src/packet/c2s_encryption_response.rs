@@ -1,17 +1,19 @@
-use std::io::Read;
-use std::net::TcpStream;
-use openssl::rsa::Padding;
 use crate::datatype::varint;
 use crate::packet;
-use crate::packet::{ClientBoundPacketBody, PacketBody, PacketError, s2c_disconnect, ServerBoundPacketBody};
+use crate::packet::{
+    s2c_disconnect, ClientBoundPacketBody, PacketBody, PacketError, ServerBoundPacketBody,
+};
 use crate::session::Session;
+use openssl::rsa::Padding;
+use std::io::Read;
+use std::net::TcpStream;
 
 #[derive(Debug)]
 pub struct C2SEncryptionResponse {
     pub shared_secret_length: varint::VarInt,
     pub decrypted_shared_secret: Vec<u8>,
     pub verify_token_length: varint::VarInt,
-    pub decrypted_verify_token: Vec<u8>
+    pub decrypted_verify_token: Vec<u8>,
 }
 
 impl C2SEncryptionResponse {
@@ -29,8 +31,17 @@ impl C2SEncryptionResponse {
 
     fn decrypt_byte_array(session: &mut Session, from: &[u8]) -> packet::Result<Vec<u8>> {
         let mut to: Vec<u8> = vec![0; 128];
-        if let Err(e) = session.rsa.as_ref().unwrap().private_decrypt(from, &mut to, Padding::PKCS1) {
-            return Err(PacketError::EncryptionError(format!("Could not decrypt byte array: {}", e)).into());
+        if let Err(e) = session
+            .rsa
+            .as_ref()
+            .unwrap()
+            .private_decrypt(from, &mut to, Padding::PKCS1)
+        {
+            return Err(PacketError::EncryptionError(format!(
+                "Could not decrypt byte array: {}",
+                e
+            ))
+            .into());
         }
         Ok(to)
     }
@@ -44,15 +55,21 @@ impl PacketBody for C2SEncryptionResponse {
 }
 
 impl ServerBoundPacketBody for C2SEncryptionResponse {
-    fn read_from_stream(session: &mut Session, stream: &mut impl Read) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
+    fn read_from_stream(
+        session: &mut Session,
+        stream: &mut impl Read,
+    ) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
         let shared_secret_length = varint::read_from_stream(stream)?;
-        let shared_secret: Vec<u8> = Self::read_byte_array(stream, shared_secret_length.value as usize)?;
+        let shared_secret: Vec<u8> =
+            Self::read_byte_array(stream, shared_secret_length.value as usize)?;
 
         let verify_token_length = varint::read_from_stream(stream)?;
-        let verify_token: Vec<u8> = Self::read_byte_array(stream, verify_token_length.value as usize)?;
+        let verify_token: Vec<u8> =
+            Self::read_byte_array(stream, verify_token_length.value as usize)?;
 
         // decrypt shared secret
-        let mut decrypted_shared_secret: Vec<u8> = Self::decrypt_byte_array(session, &shared_secret)?;
+        let mut decrypted_shared_secret: Vec<u8> =
+            Self::decrypt_byte_array(session, &shared_secret)?;
         decrypted_shared_secret.resize(16, 0);
 
         // decrypt verify token
@@ -68,7 +85,7 @@ impl ServerBoundPacketBody for C2SEncryptionResponse {
             shared_secret_length,
             decrypted_shared_secret,
             verify_token_length,
-            decrypted_verify_token
+            decrypted_verify_token,
         }))
     }
 

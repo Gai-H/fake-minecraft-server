@@ -1,14 +1,16 @@
-use std::io::Read;
 use crate::datatype::DatatypeError;
+use std::io::Read;
 
 #[derive(Debug, PartialEq)]
 pub struct UUID {
-    pub value: u128
+    pub value: u128,
 }
 
 impl From<&[u8; 16]> for UUID {
     fn from(bytes: &[u8; 16]) -> Self {
-        UUID { value: u128::from_be_bytes(*bytes) }
+        UUID {
+            value: u128::from_be_bytes(*bytes),
+        }
     }
 }
 
@@ -29,13 +31,19 @@ pub fn read_from_stream(stream: &mut impl Read) -> Result<UUID, DatatypeError> {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::VecDeque;
     use crate::datatype::uuid;
     use crate::datatype::uuid::UUID;
+    use std::collections::VecDeque;
 
     #[test]
     fn test_read_from_stream() {
-        let mut bytes: VecDeque<u8> = VecDeque::from([0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54, 0x32, 0x10]);
-        assert_eq!(uuid::read_from_stream(&mut bytes), Ok(UUID::from(0x0123456789abcdeffedcba9876543210)));
+        let mut bytes: VecDeque<u8> = VecDeque::from([
+            0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef, 0xfe, 0xdc, 0xba, 0x98, 0x76, 0x54,
+            0x32, 0x10,
+        ]);
+        assert_eq!(
+            uuid::read_from_stream(&mut bytes),
+            Ok(UUID::from(0x0123456789abcdeffedcba9876543210))
+        );
     }
 }

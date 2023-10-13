@@ -1,14 +1,16 @@
-use std::io::Read;
 use crate::datatype::DatatypeError;
+use std::io::Read;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Long {
-    pub value: i64
+    pub value: i64,
 }
 
 impl From<&[u8; 8]> for Long {
     fn from(v: &[u8; 8]) -> Self {
-        Long { value: i64::from_be_bytes(*v) }
+        Long {
+            value: i64::from_be_bytes(*v),
+        }
     }
 }
 
@@ -35,8 +37,8 @@ pub fn read_from_stream(stream: &mut impl Read) -> Result<Long, DatatypeError> {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::VecDeque;
     use super::*;
+    use std::collections::VecDeque;
 
     #[test]
     fn test_from_u8_array() {
@@ -54,7 +56,8 @@ mod tests {
 
     #[test]
     fn test_read_from_stream() {
-        let mut bytes: VecDeque<u8> = VecDeque::from([0x00, 0x00, 0x00, 0x00, 0x7f, 0xff, 0xff, 0xff]);
+        let mut bytes: VecDeque<u8> =
+            VecDeque::from([0x00, 0x00, 0x00, 0x00, 0x7f, 0xff, 0xff, 0xff]);
         assert_eq!(read_from_stream(&mut bytes), Ok(Long::from(2147483647)));
     }
 }

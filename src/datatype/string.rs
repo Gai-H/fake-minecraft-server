@@ -1,9 +1,9 @@
+use crate::datatype::{varint, DatatypeError};
 use std::io::Read;
-use crate::datatype::{DatatypeError, varint};
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct String {
-    pub value: std::string::String
+    pub value: std::string::String,
 }
 
 impl String {
@@ -12,7 +12,9 @@ impl String {
 
 impl From<&str> for String {
     fn from(v: &str) -> Self {
-        String { value: v.to_string() }
+        String {
+            value: v.to_string(),
+        }
     }
 }
 
@@ -44,32 +46,43 @@ pub fn read_from_stream(stream: &mut impl Read) -> Result<String, DatatypeError>
     for _ in 0..length.value {
         match stream.read_exact(&mut byte[..]) {
             Ok(_) => bytes.push(byte[0]),
-            Err(_) => return Err(DatatypeError::ReadError)
+            Err(_) => return Err(DatatypeError::ReadError),
         }
     }
 
     return match std::string::String::from_utf8(bytes) {
-        Ok(s) => Ok(String { value: s}),
-        Err(_) => Err(DatatypeError::ConvertError)
-    }
+        Ok(s) => Ok(String { value: s }),
+        Err(_) => Err(DatatypeError::ConvertError),
+    };
 }
 
 #[cfg(test)]
 mod tests {
-    use std::collections::VecDeque;
     use super::*;
+    use std::collections::VecDeque;
 
     #[test]
     fn test_read_from_stream() {
-        let mut bytes: VecDeque<u8> = VecDeque::from([0x1c, 0xe3, 0x81, 0x93, 0xe3, 0x82, 0x93, 0xe3, 0x81, 0xab, 0xe3, 0x81, 0xa1, 0xe3, 0x81, 0xaf, 0x2c, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64, 0xf0, 0x9f, 0x8c, 0x9f, 0xc2, 0xa5]);
-        assert_eq!(read_from_stream(&mut bytes), Ok(String::from("こんにちは, World🌟¥")));
+        let mut bytes: VecDeque<u8> = VecDeque::from([
+            0x1c, 0xe3, 0x81, 0x93, 0xe3, 0x82, 0x93, 0xe3, 0x81, 0xab, 0xe3, 0x81, 0xa1, 0xe3,
+            0x81, 0xaf, 0x2c, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64, 0xf0, 0x9f, 0x8c, 0x9f, 0xc2,
+            0xa5,
+        ]);
+        assert_eq!(
+            read_from_stream(&mut bytes),
+            Ok(String::from("こんにちは, World🌟¥"))
+        );
     }
 
     #[test]
     fn test_into() {
         let s = String::from("こんにちは, World🌟¥");
         let s_into: Vec<u8> = s.into();
-        let bytes: Vec<u8> = Vec::from([0x1c, 0xe3, 0x81, 0x93, 0xe3, 0x82, 0x93, 0xe3, 0x81, 0xab, 0xe3, 0x81, 0xa1, 0xe3, 0x81, 0xaf, 0x2c, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64, 0xf0, 0x9f, 0x8c, 0x9f, 0xc2, 0xa5]);
+        let bytes: Vec<u8> = Vec::from([
+            0x1c, 0xe3, 0x81, 0x93, 0xe3, 0x82, 0x93, 0xe3, 0x81, 0xab, 0xe3, 0x81, 0xa1, 0xe3,
+            0x81, 0xaf, 0x2c, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64, 0xf0, 0x9f, 0x8c, 0x9f, 0xc2,
+            0xa5,
+        ]);
         assert_eq!(s_into, bytes);
     }
 }

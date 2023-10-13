@@ -15,7 +15,7 @@ impl fmt::Display for SessionState {
         match self {
             SessionState::HANDSHAKING => write!(f, "HANDSHAKING"),
             SessionState::STATUS => write!(f, "STATUS"),
-            SessionState::LOGIN => write!(f, "LOGIN")
+            SessionState::LOGIN => write!(f, "LOGIN"),
         }
     }
 }
@@ -32,7 +32,7 @@ pub struct Session {
     pub uuid: Option<u128>,
     pub rsa: Option<openssl::rsa::Rsa<openssl::pkey::Private>>,
     pub verify_token: Option<Vec<u8>>,
-    pub shared_secret: Option<Vec<u8>>
+    pub shared_secret: Option<Vec<u8>>,
 }
 
 impl Session {
@@ -50,7 +50,7 @@ impl Session {
             uuid: None,
             rsa: None,
             verify_token: None,
-            shared_secret: None
+            shared_secret: None,
         }
     }
 }

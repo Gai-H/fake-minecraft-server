@@ -1,14 +1,14 @@
-use std::io::Read;
-use std::net::TcpStream;
 use crate::datatype::long;
 use crate::packet;
-use crate::packet::{ClientBoundPacketBody, PacketBody, ServerBoundPacketBody};
 use crate::packet::s2c_ping_response::S2CPingResponsePacket;
+use crate::packet::{ClientBoundPacketBody, PacketBody, ServerBoundPacketBody};
 use crate::session::Session;
+use std::io::Read;
+use std::net::TcpStream;
 
 #[derive(Debug)]
 pub struct C2SPingRequestPacket {
-    pub payload: long::Long
+    pub payload: long::Long,
 }
 
 impl C2SPingRequestPacket {
@@ -24,12 +24,13 @@ impl PacketBody for C2SPingRequestPacket {
 }
 
 impl ServerBoundPacketBody for C2SPingRequestPacket {
-    fn read_from_stream(_: &mut Session, stream: &mut impl Read) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
+    fn read_from_stream(
+        _: &mut Session,
+        stream: &mut impl Read,
+    ) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
         let value = long::read_from_stream(stream)?;
 
-        Ok(Box::new(C2SPingRequestPacket {
-            payload: value
-        }))
+        Ok(Box::new(C2SPingRequestPacket { payload: value }))
     }
 
     fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> packet::Result<()> {

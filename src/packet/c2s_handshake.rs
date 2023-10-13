@@ -1,17 +1,17 @@
+use crate::datatype::{string, unsigned_short, varint};
+use crate::packet;
+use crate::packet::{PacketBody, PacketError, ServerBoundPacketBody};
+use crate::session::{Session, SessionState};
 use std::fmt::Debug;
 use std::io::Read;
 use std::net::TcpStream;
-use crate::session::{Session, SessionState};
-use crate::datatype::{string, varint, unsigned_short};
-use crate::packet;
-use crate::packet::{PacketBody, PacketError, ServerBoundPacketBody};
 
 #[derive(Debug)]
 pub struct C2SHandshakePacket {
     protocol_version: varint::VarInt,
     server_address: string::String,
     server_port: unsigned_short::UnsignedShort,
-    next_state: varint::VarInt
+    next_state: varint::VarInt,
 }
 
 impl C2SHandshakePacket {
@@ -36,13 +36,16 @@ impl PacketBody for C2SHandshakePacket {
                 session.state = SessionState::LOGIN;
                 session.next_packet_ids = &C2SHandshakePacket::NEXT_PACKET_IDS_LOGIN;
             }
-            _ => unreachable!()
+            _ => unreachable!(),
         }
     }
 }
 
 impl ServerBoundPacketBody for C2SHandshakePacket {
-    fn read_from_stream(_: &mut Session, stream: &mut impl Read) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
+    fn read_from_stream(
+        _: &mut Session,
+        stream: &mut impl Read,
+    ) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
         let protocol_version = varint::read_from_stream(stream)?;
 
         let server_address = string::read_from_stream(stream)?;
@@ -51,14 +54,18 @@ impl ServerBoundPacketBody for C2SHandshakePacket {
 
         let next_state = varint::read_from_stream(stream)?;
         if next_state.value != 1 && next_state.value != 2 {
-            return Err(PacketError::SequenceError(format!("Invalid next state for C2SHandshakePacket: {}", next_state.value)).into())
+            return Err(PacketError::SequenceError(format!(
+                "Invalid next state for C2SHandshakePacket: {}",
+                next_state.value
+            ))
+            .into());
         }
 
         Ok(Box::new(C2SHandshakePacket {
             protocol_version,
             server_address,
             server_port,
-            next_state
+            next_state,
         }))
     }
     fn respond(&self, _: &mut Session, _: &mut TcpStream) -> packet::Result<()> {

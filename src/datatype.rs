@@ -1,16 +1,16 @@
 use std::{error, fmt};
 
-pub mod varint;
+pub mod long;
 pub mod string;
 pub mod unsigned_short;
-pub mod long;
 pub mod uuid;
+pub mod varint;
 
 #[derive(Debug)]
 pub enum DatatypeError {
     ReadError,
     ConvertError,
-    TooLongStringError
+    TooLongStringError,
 }
 
 impl fmt::Display for DatatypeError {
@@ -18,10 +18,9 @@ impl fmt::Display for DatatypeError {
         match *self {
             DatatypeError::ReadError => write!(f, "Could not read bytes from stream."),
             DatatypeError::ConvertError => write!(f, "Could not convert bytes."),
-            DatatypeError::TooLongStringError => write!(f, "String is too long.")
+            DatatypeError::TooLongStringError => write!(f, "String is too long."),
         }
     }
 }
 
-impl error::Error for DatatypeError {
-}
+impl error::Error for DatatypeError {}

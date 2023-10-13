@@ -2,12 +2,12 @@ mod datatype;
 mod packet;
 mod session;
 
+use crate::session::Session;
+use config::Config;
+use lazy_static::lazy_static;
 use std::error;
 use std::net::{TcpListener, TcpStream};
 use std::process::Command;
-use config::Config;
-use lazy_static::lazy_static;
-use crate::session::Session;
 
 lazy_static! {
     static ref CONFIG: Config = Config::builder()
@@ -48,7 +48,10 @@ fn main() {
     }
 }
 
-fn handle_connection(session: &mut Session, stream: &mut TcpStream) -> Result<(), Box<dyn error::Error>> {
+fn handle_connection(
+    session: &mut Session,
+    stream: &mut TcpStream,
+) -> Result<(), Box<dyn error::Error>> {
     loop {
         // read header
         let header = packet::read_packet_header_from_stream(session, stream)?;
@@ -62,7 +65,7 @@ fn handle_connection(session: &mut Session, stream: &mut TcpStream) -> Result<()
 
         // terminate
         if session.next_packet_ids.len() == 0 {
-            break
+            break;
         }
     }
     Ok(())
@@ -88,7 +91,7 @@ fn run_command(session: &Session) {
                 } else {
                     format!("{:x}", session.uuid.clone().unwrap())
                 }
-            },
+            }
             "%state%" => session.state.to_string(),
             _ => arg.clone(),
         };
@@ -97,7 +100,10 @@ fn run_command(session: &Session) {
     }
 
     // run
-    let out = Command::new(&cmd_vec[0]).args(replaced_args).output().expect("Failed to run command.");
+    let out = Command::new(&cmd_vec[0])
+        .args(replaced_args)
+        .output()
+        .expect("Failed to run command.");
     println!("{}", String::from_utf8_lossy(&out.stdout));
     eprintln!("{}", String::from_utf8_lossy(&out.stderr));
 }

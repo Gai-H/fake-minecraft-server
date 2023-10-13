@@ -1,9 +1,9 @@
-use std::fmt::Debug;
-use std::io::Write;
 use crate::datatype::{string, varint};
 use crate::packet;
 use crate::packet::{ClientBoundPacketBody, PacketBody, PacketError};
 use crate::session::Session;
+use std::fmt::Debug;
+use std::io::Write;
 
 #[derive(Debug)]
 pub struct S2CEncryptionRequest {
@@ -12,7 +12,7 @@ pub struct S2CEncryptionRequest {
     pub public_key_length: varint::VarInt,
     pub public_key: Vec<u8>,
     pub verify_token_length: varint::VarInt,
-    pub verify_token: Vec<u8>
+    pub verify_token: Vec<u8>,
 }
 
 impl S2CEncryptionRequest {
@@ -24,11 +24,23 @@ impl S2CEncryptionRequest {
         // generate RSA key pair
         let rsa = match openssl::rsa::Rsa::generate(1024) {
             Ok(r) => r,
-            Err(e) => return Err(PacketError::EncryptionError(format!("Failed to generate RSA key pair: {}", e)).into())
+            Err(e) => {
+                return Err(PacketError::EncryptionError(format!(
+                    "Failed to generate RSA key pair: {}",
+                    e
+                ))
+                .into())
+            }
         };
         let public_key = match rsa.public_key_to_der() {
             Ok(p) => p,
-            Err(e) => return Err(PacketError::EncryptionError(format!("Failed to encode RSA public key to DER: {}", e)).into())
+            Err(e) => {
+                return Err(PacketError::EncryptionError(format!(
+                    "Failed to encode RSA public key to DER: {}",
+                    e
+                ))
+                .into())
+            }
         };
         let public_key_length = varint::VarInt::from(public_key.len() as i32);
 
@@ -36,8 +48,14 @@ impl S2CEncryptionRequest {
         let verify_token_length = varint::VarInt::from(4);
         let mut verify_token_array: [u8; 4] = [0; 4];
         match openssl::rand::rand_bytes(&mut verify_token_array) {
-            Ok(_) => {},
-            Err(e) => return Err(PacketError::EncryptionError(format!("Failed to generate verify token: {}", e)).into())
+            Ok(_) => {}
+            Err(e) => {
+                return Err(PacketError::EncryptionError(format!(
+                    "Failed to generate verify token: {}",
+                    e
+                ))
+                .into())
+            }
         };
         let verify_token = verify_token_array.to_vec();
 
@@ -47,7 +65,7 @@ impl S2CEncryptionRequest {
             public_key_length,
             public_key,
             verify_token_length,
-            verify_token
+            verify_token,
         })
     }
 }
@@ -73,8 +91,10 @@ impl ClientBoundPacketBody for S2CEncryptionRequest {
             public_key_length_bytes.len(),
             self.public_key.len(),
             verify_token_length_bytes.len(),
-            self.verify_token.len()
-        ].iter().sum();
+            self.verify_token.len(),
+        ]
+        .iter()
+        .sum();
         let packet_length_bytes: Vec<u8> = varint::VarInt::from(packet_length as i32).into();
 
         let bytes: Vec<u8> = [
@@ -84,8 +104,9 @@ impl ClientBoundPacketBody for S2CEncryptionRequest {
             &public_key_length_bytes[..],
             &self.public_key[..],
             &verify_token_length_bytes[..],
-            &self.verify_token[..]
-        ].concat();
+            &self.verify_token[..],
+        ]
+        .concat();
 
         if stream.write_all(&bytes).is_err() {
             return Err(PacketError::WriteError.into());

@@ -1,10 +1,10 @@
+use crate::datatype::DatatypeError;
 use std::io::Read;
 use std::result::Result;
-use crate::datatype::DatatypeError;
 
 #[derive(Debug, Clone)]
 pub struct VarInt {
-    pub value: i32
+    pub value: i32,
 }
 
 impl VarInt {

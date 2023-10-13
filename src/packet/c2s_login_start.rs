@@ -1,15 +1,15 @@
-use std::io::Read;
-use std::net::TcpStream;
 use crate::datatype::{string, uuid};
 use crate::packet;
-use crate::packet::{ClientBoundPacketBody, PacketBody, ServerBoundPacketBody};
 use crate::packet::s2c_encryption_request::S2CEncryptionRequest;
+use crate::packet::{ClientBoundPacketBody, PacketBody, ServerBoundPacketBody};
 use crate::session::Session;
+use std::io::Read;
+use std::net::TcpStream;
 
 #[derive(Debug)]
 pub struct C2SLoginStartPacket {
     pub name: string::String,
-    pub uuid: uuid::UUID
+    pub uuid: uuid::UUID,
 }
 
 impl C2SLoginStartPacket {
@@ -27,15 +27,15 @@ impl PacketBody for C2SLoginStartPacket {
 }
 
 impl ServerBoundPacketBody for C2SLoginStartPacket {
-    fn read_from_stream(_: &mut Session, stream: &mut impl Read) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
+    fn read_from_stream(
+        _: &mut Session,
+        stream: &mut impl Read,
+    ) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
         let name = string::read_from_stream(stream)?;
 
         let uuid = uuid::read_from_stream(stream)?;
 
-        Ok(Box::new(C2SLoginStartPacket {
-            name,
-            uuid
-        }))
+        Ok(Box::new(C2SLoginStartPacket { name, uuid }))
     }
 
     fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> packet::Result<()> {
