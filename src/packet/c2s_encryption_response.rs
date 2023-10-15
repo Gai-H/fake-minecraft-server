@@ -4,6 +4,7 @@ use crate::packet::{
     s2c_disconnect, ClientBoundPacketBody, PacketBody, PacketError, ServerBoundPacketBody,
 };
 use crate::session::Session;
+use fake_minecraft_server::encryption;
 use std::io::Read;
 use std::net::TcpStream;
 
@@ -13,6 +14,7 @@ pub struct C2SEncryptionResponse {
     pub decrypted_shared_secret: Vec<u8>,
     pub verify_token_length: varint::VarInt,
     pub decrypted_verify_token: Vec<u8>,
+    pub is_authenticated: bool,
 }
 
 impl C2SEncryptionResponse {
@@ -33,6 +35,7 @@ impl PacketBody for C2SEncryptionResponse {
     fn update_session(&self, session: &mut Session) {
         session.next_packet_ids = &Self::NEXT_PACKET_IDS;
         session.shared_secret = Some(self.decrypted_shared_secret.clone());
+        session.is_authenticated = self.is_authenticated;
     }
 }
 
@@ -67,11 +70,24 @@ impl ServerBoundPacketBody for C2SEncryptionResponse {
             return Err(PacketError::EncryptionError("Invalid verify token".to_string()).into());
         }
 
+        // authenticate
+        let auth_res = encryption::authenticate(
+            &decrypted_shared_secret,
+            &session
+                .rsa
+                .as_ref()
+                .unwrap()
+                .get_public_key_in_der()
+                .unwrap(),
+            &session.username.as_ref().unwrap(),
+        );
+
         Ok(Box::new(C2SEncryptionResponse {
             shared_secret_length,
             decrypted_shared_secret,
             verify_token_length,
             decrypted_verify_token,
+            is_authenticated: auth_res.is_ok(),
         }))
     }
 

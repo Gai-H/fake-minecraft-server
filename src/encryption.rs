@@ -2,7 +2,7 @@ use std::error;
 use std::fmt;
 
 type OpenSslRsa = openssl::rsa::Rsa<openssl::pkey::Private>;
-type Result<T> = std::result::Result<T, Box<EncryptionError>>;
+type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 
 #[derive(Debug, Clone)]
 pub struct Rsa {
@@ -68,6 +68,28 @@ pub fn generate_verify_token() -> Result<[u8; 4]> {
     Ok(verify_token_array)
 }
 
+fn get_hex_digest(bytes: &[u8; 20]) -> String {
+    num_bigint::BigInt::from_signed_bytes_be(bytes).to_str_radix(16)
+}
+
+pub fn authenticate(
+    shared_secret: &Vec<u8>,
+    pkey_in_der: &Vec<u8>,
+    username: &String,
+) -> Result<()> {
+    let mut hasher = openssl::sha::Sha1::new();
+    hasher.update(shared_secret);
+    hasher.update(pkey_in_der);
+    let hex_digest = get_hex_digest(&hasher.finish());
+
+    let url = format!("https://sessionserver.mojang.com/session/minecraft/hasJoined?username={username}&serverId={hex_digest}");
+    if reqwest::blocking::get(url)?.status().as_str() != "200" {
+        return Err(EncryptionError::new("Failed to authenticate player".to_string()).into());
+    }
+
+    Ok(())
+}
+
 #[derive(Debug)]
 pub struct EncryptionError {
     reason: String,
@@ -86,3 +108,36 @@ impl fmt::Display for EncryptionError {
 }
 
 impl error::Error for EncryptionError {}
+
+#[cfg(test)]
+mod tests {
+    use crate::encryption::get_hex_digest;
+
+    #[test]
+    fn test_get_hex_digest() {
+        let mut hasher = openssl::sha::Sha1::new();
+
+        // Notch
+        hasher.update("Notch".as_bytes());
+        assert_eq!(
+            get_hex_digest(&hasher.finish()),
+            "4ed1f46bbe04bc756bcb17c0c7ce3e4632f06a48"
+        );
+
+        // jeb_
+        hasher = openssl::sha::Sha1::new();
+        hasher.update("jeb_".as_bytes());
+        assert_eq!(
+            get_hex_digest(&hasher.finish()),
+            "-7c9d5b0044c130109a5d7b5fb5c317c02b4e28c1"
+        );
+
+        // simon
+        hasher = openssl::sha::Sha1::new();
+        hasher.update("simon".as_bytes());
+        assert_eq!(
+            get_hex_digest(&hasher.finish()),
+            "88e16a1019277b15d58faf0541e11910eb756f6"
+        );
+    }
+}
