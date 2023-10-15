@@ -4,7 +4,6 @@ use crate::packet::{
     s2c_disconnect, ClientBoundPacketBody, PacketBody, PacketError, ServerBoundPacketBody,
 };
 use crate::session::Session;
-use openssl::rsa::Padding;
 use std::io::Read;
 use std::net::TcpStream;
 
@@ -27,23 +26,6 @@ impl C2SEncryptionResponse {
             return Err(PacketError::ReadError(format!("Could not read byte array: {}", e)).into());
         }
         Ok(array)
-    }
-
-    fn decrypt_byte_array(session: &mut Session, from: &[u8]) -> packet::Result<Vec<u8>> {
-        let mut to: Vec<u8> = vec![0; 128];
-        if let Err(e) = session
-            .rsa
-            .as_ref()
-            .unwrap()
-            .private_decrypt(from, &mut to, Padding::PKCS1)
-        {
-            return Err(PacketError::EncryptionError(format!(
-                "Could not decrypt byte array: {}",
-                e
-            ))
-            .into());
-        }
-        Ok(to)
     }
 }
 
@@ -68,17 +50,21 @@ impl ServerBoundPacketBody for C2SEncryptionResponse {
             Self::read_byte_array(stream, verify_token_length.value as usize)?;
 
         // decrypt shared secret
-        let mut decrypted_shared_secret: Vec<u8> =
-            Self::decrypt_byte_array(session, &shared_secret)?;
+        let mut decrypted_shared_secret = session
+            .rsa
+            .as_ref()
+            .unwrap()
+            .decrypt_bytes(&shared_secret)?;
         decrypted_shared_secret.resize(16, 0);
 
         // decrypt verify token
-        let mut decrypted_verify_token: Vec<u8> = Self::decrypt_byte_array(session, &verify_token)?;
+        let mut decrypted_verify_token =
+            session.rsa.as_ref().unwrap().decrypt_bytes(&verify_token)?;
         decrypted_verify_token.resize(4, 0);
 
         // check verify token
         if decrypted_verify_token != *session.verify_token.as_ref().unwrap() {
-            return Err(PacketError::EncryptionError(format!("Invalid verify token")).into());
+            return Err(PacketError::EncryptionError("Invalid verify token".to_string()).into());
         }
 
         Ok(Box::new(C2SEncryptionResponse {

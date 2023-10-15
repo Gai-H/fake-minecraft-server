@@ -1,3 +1,4 @@
+use fake_minecraft_server::encryption;
 use std::fmt;
 use std::net::{SocketAddr, TcpStream};
 
@@ -30,7 +31,7 @@ pub struct Session {
     pub server_port: Option<u16>,
     pub username: Option<String>,
     pub uuid: Option<u128>,
-    pub rsa: Option<openssl::rsa::Rsa<openssl::pkey::Private>>,
+    pub rsa: Option<encryption::Rsa>,
     pub verify_token: Option<Vec<u8>>,
     pub shared_secret: Option<Vec<u8>>,
 }

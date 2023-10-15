@@ -2,12 +2,13 @@ use crate::datatype::{string, varint};
 use crate::packet;
 use crate::packet::{ClientBoundPacketBody, PacketBody, PacketError};
 use crate::session::Session;
+use fake_minecraft_server::encryption;
 use std::fmt::Debug;
 use std::io::Write;
 
 #[derive(Debug)]
 pub struct S2CEncryptionRequest {
-    pub rsa: openssl::rsa::Rsa<openssl::pkey::Private>,
+    pub rsa: encryption::Rsa,
     pub server_id: string::String,
     pub public_key_length: varint::VarInt,
     pub public_key: Vec<u8>,
@@ -21,43 +22,14 @@ impl S2CEncryptionRequest {
     pub fn new() -> packet::Result<S2CEncryptionRequest> {
         let server_id = string::String::from("");
 
-        // generate RSA key pair
-        let rsa = match openssl::rsa::Rsa::generate(1024) {
-            Ok(r) => r,
-            Err(e) => {
-                return Err(PacketError::EncryptionError(format!(
-                    "Failed to generate RSA key pair: {}",
-                    e
-                ))
-                .into())
-            }
-        };
-        let public_key = match rsa.public_key_to_der() {
-            Ok(p) => p,
-            Err(e) => {
-                return Err(PacketError::EncryptionError(format!(
-                    "Failed to encode RSA public key to DER: {}",
-                    e
-                ))
-                .into())
-            }
-        };
+        // generate RSA
+        let rsa = encryption::Rsa::new()?;
+        let public_key = rsa.get_public_key_in_der()?;
         let public_key_length = varint::VarInt::from(public_key.len() as i32);
 
         // generate verify token
         let verify_token_length = varint::VarInt::from(4);
-        let mut verify_token_array: [u8; 4] = [0; 4];
-        match openssl::rand::rand_bytes(&mut verify_token_array) {
-            Ok(_) => {}
-            Err(e) => {
-                return Err(PacketError::EncryptionError(format!(
-                    "Failed to generate verify token: {}",
-                    e
-                ))
-                .into())
-            }
-        };
-        let verify_token = verify_token_array.to_vec();
+        let verify_token = encryption::generate_verify_token()?.to_vec();
 
         Ok(S2CEncryptionRequest {
             rsa,
