@@ -18,7 +18,7 @@ lazy_static! {
 
 fn main() {
     let port = CONFIG.get::<u16>("port").unwrap_or(25565);
-    let full_address = format!("127.0.0.1:{}", port);
+    let full_address = format!("0.0.0.0:{}", port);
 
     let listener = match TcpListener::bind(&full_address) {
         Ok(l) => l,
