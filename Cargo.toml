@@ -10,3 +10,4 @@ openssl = "0.10.57"
 lazy_static = "1.4.0"
 config = "0.13.3"
 num-bigint = "0.4.4"
+reqwest = { version = "0.11", features = ["blocking"] }
