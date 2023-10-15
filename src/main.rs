@@ -93,6 +93,7 @@ fn run_command(session: &Session) {
                 }
             }
             "%state%" => session.state.to_string(),
+            "%is_authenticated%" => session.is_authenticated.to_string(),
             _ => arg.clone(),
         };
 
