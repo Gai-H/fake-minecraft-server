@@ -1,4 +1,4 @@
-use crate::datatype::{varint, DatatypeError};
+use super::{varint, DatatypeError};
 use std::io::Read;
 
 #[derive(Debug, PartialEq, Clone)]

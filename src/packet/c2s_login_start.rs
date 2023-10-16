@@ -1,4 +1,4 @@
-use crate::datatype::{string, uuid};
+use super::datatype::{string, uuid};
 use crate::packet;
 use crate::packet::s2c_encryption_request::S2CEncryptionRequest;
 use crate::packet::{ClientBoundPacketBody, PacketBody, ServerBoundPacketBody};

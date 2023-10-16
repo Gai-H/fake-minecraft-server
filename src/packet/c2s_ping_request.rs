@@ -1,4 +1,4 @@
-use crate::datatype::long;
+use super::datatype::long;
 use crate::packet;
 use crate::packet::s2c_ping_response::S2CPingResponsePacket;
 use crate::packet::{ClientBoundPacketBody, PacketBody, ServerBoundPacketBody};

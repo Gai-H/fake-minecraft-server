@@ -1,4 +1,4 @@
-use crate::datatype::{long, varint};
+use super::datatype::{long, varint};
 use crate::packet;
 use crate::packet::{ClientBoundPacketBody, PacketBody, PacketError};
 use crate::session::Session;

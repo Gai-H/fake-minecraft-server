@@ -1,4 +1,4 @@
-use crate::datatype::varint;
+use super::datatype::varint;
 use crate::packet;
 use crate::packet::{
     s2c_disconnect, ClientBoundPacketBody, PacketBody, PacketError, ServerBoundPacketBody,

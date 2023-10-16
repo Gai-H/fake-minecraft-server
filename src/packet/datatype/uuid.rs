@@ -1,4 +1,4 @@
-use crate::datatype::DatatypeError;
+use super::DatatypeError;
 use std::io::Read;
 
 #[derive(Debug, PartialEq)]
@@ -31,8 +31,7 @@ pub fn read_from_stream(stream: &mut impl Read) -> Result<UUID, DatatypeError> {
 
 #[cfg(test)]
 mod tests {
-    use crate::datatype::uuid;
-    use crate::datatype::uuid::UUID;
+    use super::{read_from_stream, UUID};
     use std::collections::VecDeque;
 
     #[test]
@@ -42,7 +41,7 @@ mod tests {
             0x32, 0x10,
         ]);
         assert_eq!(
-            uuid::read_from_stream(&mut bytes),
+            read_from_stream(&mut bytes),
             Ok(UUID::from(0x0123456789abcdeffedcba9876543210))
         );
     }

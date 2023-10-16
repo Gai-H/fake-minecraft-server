@@ -1,5 +1,5 @@
-use crate::datatype::varint;
 use crate::session::{Session, SessionState};
+use datatype::varint;
 use std::fmt::Debug;
 use std::io::{Read, Write};
 use std::net::TcpStream;
@@ -14,6 +14,8 @@ pub mod s2c_disconnect;
 pub mod s2c_encryption_request;
 pub mod s2c_ping_response;
 pub mod s2c_status_response;
+
+mod datatype;
 
 pub type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 

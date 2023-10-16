@@ -1,4 +1,3 @@
-mod datatype;
 mod packet;
 mod session;
 

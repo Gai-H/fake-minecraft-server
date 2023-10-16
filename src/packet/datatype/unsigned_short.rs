@@ -1,4 +1,4 @@
-use crate::datatype::DatatypeError;
+use super::DatatypeError;
 use std::io::Read;
 
 #[derive(Debug)]

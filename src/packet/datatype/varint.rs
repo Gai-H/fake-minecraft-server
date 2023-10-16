@@ -1,4 +1,4 @@
-use crate::datatype::DatatypeError;
+use super::DatatypeError;
 use std::io::Read;
 use std::result::Result;
 
@@ -74,7 +74,7 @@ pub fn read_from_stream(stream: &mut impl Read) -> Result<VarInt, DatatypeError>
 
 #[cfg(test)]
 mod test {
-    use crate::datatype::varint::VarInt;
+    use super::VarInt;
 
     #[test]
     fn test_into_positive() {

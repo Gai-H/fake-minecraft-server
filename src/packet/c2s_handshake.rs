@@ -1,4 +1,4 @@
-use crate::datatype::{string, unsigned_short, varint};
+use super::datatype::{string, unsigned_short, varint};
 use crate::packet;
 use crate::packet::{PacketBody, PacketError, ServerBoundPacketBody};
 use crate::session::{Session, SessionState};
