@@ -23,7 +23,7 @@ OpenSSL - [プロトコル暗号化](https://wiki.vg/Protocol_Encryption) のた
 |`players-max`|`u16`|プレイヤー数の上限|
 |`players-online`|`u16`|参加中のプレイヤー数|
 |`disconnect-reason`|`String`|キック時に表示される文章|
-|`command`|`[String]`|ステータスもしくはログインのリクエストが成功したときに実行するコマンド <br> 以下の変数は置換される <br> `%peer-address%` - 例: `127.0.0.1:12345` <br> `%username%` - 例: `Notch` <br> `%uuid%` - 例: `069a79f444e94726a5befca90e38aaf5` <br> `%state%` - `STATUS` or `LOGIN` <br> `%is_authenticated%` - `true` or `false`|
+|`command`|`[String]`|ステータスもしくはログインのリクエストが成功したときに実行するコマンド <br> 以下の変数は置換される <br> `%peer_address%` - 例: `127.0.0.1:12345` <br> `%username%` - 例: `Notch` <br> `%uuid%` - 例: `069a79f444e94726a5befca90e38aaf5` <br> `%state%` - `STATUS` or `LOGIN` <br> `%is_authenticated%` - `true` or `false`|
 
 
 ## References
