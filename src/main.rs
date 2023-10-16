@@ -3,7 +3,10 @@ mod session;
 
 use crate::session::Session;
 use config::Config;
+use env_logger::Builder;
+use env_logger::Target::Stdout;
 use lazy_static::lazy_static;
+use log::{debug, error, info, warn};
 use std::error;
 use std::net::{TcpListener, TcpStream};
 use std::process::Command;
@@ -16,34 +19,39 @@ lazy_static! {
 }
 
 fn main() {
+    Builder::from_default_env().target(Stdout).init();
+
     let port = CONFIG.get::<u16>("port").unwrap_or(25565);
     let full_address = format!("0.0.0.0:{}", port);
 
     let listener = match TcpListener::bind(&full_address) {
         Ok(l) => l,
         Err(_) => {
-            eprintln!("Could not start listening on {}.", &full_address);
+            error!("Could not start listening on {}.", &full_address);
             return;
         }
     };
-    println!("Successfully listening on {}.", &full_address);
+    info!("Successfully listening on {}.", &full_address);
 
     for stream in listener.incoming() {
+        info!("New connection");
         let mut stream = match stream {
             Ok(s) => s,
             Err(e) => {
-                eprintln!("{}", e);
+                error!("{}", e);
                 continue;
             }
         };
         let mut session = Session::new(&stream);
+        info!("[Start] {}", session.peer_address.to_string());
 
         if let Err(e) = handle_connection(&mut session, &mut stream) {
-            eprintln!("{}", e);
+            error!("{}", e);
             continue;
         }
 
         run_command(&session);
+        info!("[End] {}", session.peer_address.to_string());
     }
 }
 
@@ -52,13 +60,12 @@ fn handle_connection(
     stream: &mut TcpStream,
 ) -> Result<(), Box<dyn error::Error>> {
     loop {
-        // read header
         let header = packet::read_packet_header_from_stream(session, stream)?;
+        debug!("PacketHeader: {{{}}}", header);
 
-        // read body
         let body = packet::read_packet_body_from_stream(session, stream, &header)?;
+        debug!("PacketBody received");
 
-        // update session and respond
         body.update_session(session);
         body.respond(session, stream)?;
 
@@ -98,12 +105,13 @@ fn run_command(session: &Session) {
 
         replaced_args.push(replaced_arg);
     }
+    info!("Run: {} {}", &cmd_vec[0], replaced_args.join(" "));
 
     // run
     let out = Command::new(&cmd_vec[0])
         .args(replaced_args)
         .output()
         .expect("Failed to run command.");
-    println!("{}", String::from_utf8_lossy(&out.stdout));
-    eprintln!("{}", String::from_utf8_lossy(&out.stderr));
+    info!("StdOut: {}", String::from_utf8_lossy(&out.stdout));
+    warn!("StdErr: {}", String::from_utf8_lossy(&out.stderr));
 }

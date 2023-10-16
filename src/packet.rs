@@ -25,6 +25,12 @@ pub struct PacketHeader {
     pub id: i32,
 }
 
+impl fmt::Display for PacketHeader {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "id: {}, length: {}", self.id, self.length)
+    }
+}
+
 pub fn read_packet_header_from_stream(
     session: &mut Session,
     stream: &mut TcpStream,
