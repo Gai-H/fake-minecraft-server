@@ -31,7 +31,7 @@ pub fn read_from_stream(stream: &mut impl Read) -> Result<UUID, DatatypeError> {
 
 #[cfg(test)]
 mod tests {
-    use super::{read_from_stream, UUID};
+    use super::*;
     use std::collections::VecDeque;
 
     #[test]

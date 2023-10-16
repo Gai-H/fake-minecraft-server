@@ -1,9 +1,9 @@
 use crate::session::{Session, SessionState};
 use datatype::varint;
-use std::fmt::Debug;
+use std::error;
 use std::io::{Read, Write};
 use std::net::TcpStream;
-use std::{error, fmt};
+use std::{fmt, fmt::Debug};
 
 pub mod c2s_encryption_response;
 pub mod c2s_handshake;

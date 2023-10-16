@@ -1,6 +1,6 @@
-use crate::packet;
-use crate::packet::s2c_status_response::S2CStatusResponsePacket;
-use crate::packet::{ClientBoundPacketBody, PacketBody, ServerBoundPacketBody};
+use crate::packet::{
+    s2c_status_response, ClientBoundPacketBody, PacketBody, Result, ServerBoundPacketBody,
+};
 use crate::session::Session;
 use std::io::Read;
 use std::net::TcpStream;
@@ -24,12 +24,12 @@ impl ServerBoundPacketBody for C2SStatusRequestPacket {
     fn read_from_stream(
         _: &mut Session,
         _: &mut impl Read,
-    ) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
+    ) -> Result<Box<dyn ServerBoundPacketBody>> {
         Ok(Box::new(C2SStatusRequestPacket {}))
     }
 
-    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> packet::Result<()> {
-        let response_packet = S2CStatusResponsePacket::new();
+    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> Result<()> {
+        let response_packet = s2c_status_response::S2CStatusResponsePacket::new();
         response_packet.write_to_stream(session, stream).into()
     }
 }

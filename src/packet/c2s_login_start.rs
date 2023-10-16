@@ -1,7 +1,7 @@
 use super::datatype::{string, uuid};
-use crate::packet;
-use crate::packet::s2c_encryption_request::S2CEncryptionRequest;
-use crate::packet::{ClientBoundPacketBody, PacketBody, ServerBoundPacketBody};
+use super::{
+    s2c_encryption_request, ClientBoundPacketBody, PacketBody, Result, ServerBoundPacketBody,
+};
 use crate::session::Session;
 use std::io::Read;
 use std::net::TcpStream;
@@ -30,7 +30,7 @@ impl ServerBoundPacketBody for C2SLoginStartPacket {
     fn read_from_stream(
         _: &mut Session,
         stream: &mut impl Read,
-    ) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
+    ) -> Result<Box<dyn ServerBoundPacketBody>> {
         let name = string::read_from_stream(stream)?;
 
         let uuid = uuid::read_from_stream(stream)?;
@@ -38,8 +38,8 @@ impl ServerBoundPacketBody for C2SLoginStartPacket {
         Ok(Box::new(C2SLoginStartPacket { name, uuid }))
     }
 
-    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> packet::Result<()> {
-        let response_packet = S2CEncryptionRequest::new()?;
+    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> Result<()> {
+        let response_packet = s2c_encryption_request::S2CEncryptionRequest::new()?;
 
         response_packet.update_session(session);
 

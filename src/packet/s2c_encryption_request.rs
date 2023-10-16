@@ -1,6 +1,5 @@
 use super::datatype::{string, varint};
-use crate::packet;
-use crate::packet::{ClientBoundPacketBody, PacketBody, PacketError};
+use super::{ClientBoundPacketBody, PacketBody, PacketError, Result};
 use crate::session::Session;
 use fake_minecraft_server::encryption;
 use std::fmt::Debug;
@@ -19,7 +18,7 @@ pub struct S2CEncryptionRequest {
 impl S2CEncryptionRequest {
     pub const PACKET_ID: i32 = 0x01;
 
-    pub fn new() -> packet::Result<S2CEncryptionRequest> {
+    pub fn new() -> Result<S2CEncryptionRequest> {
         let server_id = string::String::from("");
 
         // generate RSA
@@ -50,7 +49,7 @@ impl PacketBody for S2CEncryptionRequest {
 }
 
 impl ClientBoundPacketBody for S2CEncryptionRequest {
-    fn write_to_stream(&self, _: &mut Session, stream: &mut impl Write) -> packet::Result<()> {
+    fn write_to_stream(&self, _: &mut Session, stream: &mut impl Write) -> Result<()> {
         let packet_id_bytes: Vec<u8> = varint::VarInt::from(S2CEncryptionRequest::PACKET_ID).into();
 
         let server_id_bytes: Vec<u8> = self.server_id.clone().into();

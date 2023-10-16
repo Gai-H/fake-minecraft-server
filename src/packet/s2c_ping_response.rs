@@ -1,6 +1,5 @@
 use super::datatype::{long, varint};
-use crate::packet;
-use crate::packet::{ClientBoundPacketBody, PacketBody, PacketError};
+use super::{ClientBoundPacketBody, PacketBody, PacketError, Result};
 use crate::session::Session;
 use std::fmt::Debug;
 use std::io::Write;
@@ -23,7 +22,7 @@ impl PacketBody for S2CPingResponsePacket {
 }
 
 impl ClientBoundPacketBody for S2CPingResponsePacket {
-    fn write_to_stream(&self, _: &mut Session, stream: &mut impl Write) -> packet::Result<()> {
+    fn write_to_stream(&self, _: &mut Session, stream: &mut impl Write) -> Result<()> {
         let packet_id_bytes: Vec<u8> =
             varint::VarInt::from(S2CPingResponsePacket::PACKET_ID).into();
 

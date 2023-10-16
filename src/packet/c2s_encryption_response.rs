@@ -1,7 +1,6 @@
 use super::datatype::varint;
-use crate::packet;
-use crate::packet::{
-    s2c_disconnect, ClientBoundPacketBody, PacketBody, PacketError, ServerBoundPacketBody,
+use super::{
+    s2c_disconnect, ClientBoundPacketBody, PacketBody, PacketError, Result, ServerBoundPacketBody,
 };
 use crate::session::Session;
 use fake_minecraft_server::encryption;
@@ -22,7 +21,7 @@ impl C2SEncryptionResponse {
 
     const NEXT_PACKET_IDS: [i32; 0] = []; // terminate connection
 
-    fn read_byte_array(stream: &mut impl Read, length: usize) -> packet::Result<Vec<u8>> {
+    fn read_byte_array(stream: &mut impl Read, length: usize) -> Result<Vec<u8>> {
         let mut array: Vec<u8> = vec![0; length];
         if let Err(e) = stream.read_exact(&mut array) {
             return Err(PacketError::ReadError(format!("Could not read byte array: {}", e)).into());
@@ -43,7 +42,7 @@ impl ServerBoundPacketBody for C2SEncryptionResponse {
     fn read_from_stream(
         session: &mut Session,
         stream: &mut impl Read,
-    ) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
+    ) -> Result<Box<dyn ServerBoundPacketBody>> {
         let shared_secret_length = varint::read_from_stream(stream)?;
         let shared_secret: Vec<u8> =
             Self::read_byte_array(stream, shared_secret_length.value as usize)?;
@@ -91,7 +90,7 @@ impl ServerBoundPacketBody for C2SEncryptionResponse {
         }))
     }
 
-    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> packet::Result<()> {
+    fn respond(&self, session: &mut Session, stream: &mut TcpStream) -> Result<()> {
         let response_packet = s2c_disconnect::S2CDisconnectPacket::new();
         response_packet.write_to_stream(session, stream)?;
         response_packet.update_session(session);

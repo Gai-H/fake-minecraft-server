@@ -3,8 +3,7 @@ mod session;
 
 use crate::session::Session;
 use config::Config;
-use env_logger::Builder;
-use env_logger::Target::Stdout;
+use env_logger::{Builder, Target::Stdout};
 use lazy_static::lazy_static;
 use log::{debug, error, info, warn};
 use std::error;

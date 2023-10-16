@@ -1,7 +1,7 @@
 use super::datatype::{string, varint};
-use crate::packet::{ClientBoundPacketBody, PacketBody, PacketError};
+use super::{ClientBoundPacketBody, PacketBody, PacketError, Result};
 use crate::session::Session;
-use crate::{packet, CONFIG};
+use crate::CONFIG;
 use std::io::Write;
 
 #[derive(Debug)]
@@ -31,11 +31,7 @@ impl PacketBody for S2CDisconnectPacket {
 }
 
 impl ClientBoundPacketBody for S2CDisconnectPacket {
-    fn write_to_stream(
-        &self,
-        session: &mut Session,
-        stream: &mut impl Write,
-    ) -> packet::Result<()> {
+    fn write_to_stream(&self, session: &mut Session, stream: &mut impl Write) -> Result<()> {
         let packet_id_bytes: Vec<u8> = varint::VarInt::from(S2CDisconnectPacket::PACKET_ID).into();
         let reason_bytes: Vec<u8> = string::String::from(Self::get_reason_json()).into();
 

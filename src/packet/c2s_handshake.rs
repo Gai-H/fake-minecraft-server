@@ -1,6 +1,5 @@
 use super::datatype::{string, unsigned_short, varint};
-use crate::packet;
-use crate::packet::{PacketBody, PacketError, ServerBoundPacketBody};
+use super::{PacketBody, PacketError, Result, ServerBoundPacketBody};
 use crate::session::{Session, SessionState};
 use std::fmt::Debug;
 use std::io::Read;
@@ -45,7 +44,7 @@ impl ServerBoundPacketBody for C2SHandshakePacket {
     fn read_from_stream(
         _: &mut Session,
         stream: &mut impl Read,
-    ) -> packet::Result<Box<dyn ServerBoundPacketBody>> {
+    ) -> Result<Box<dyn ServerBoundPacketBody>> {
         let protocol_version = varint::read_from_stream(stream)?;
 
         let server_address = string::read_from_stream(stream)?;
@@ -68,7 +67,7 @@ impl ServerBoundPacketBody for C2SHandshakePacket {
             next_state,
         }))
     }
-    fn respond(&self, _: &mut Session, _: &mut TcpStream) -> packet::Result<()> {
+    fn respond(&self, _: &mut Session, _: &mut TcpStream) -> Result<()> {
         Ok(())
     }
 }
