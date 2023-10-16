@@ -5,7 +5,7 @@ Rust の練習として作った見せかけの Minecraft サーバ
 [Login シーケンス](https://wiki.vg/Protocol_FAQ#What.27s_the_normal_login_sequence_for_a_client.3F) の Encryption Response を受け取るまでを実装している
 (Encryption Response パケットを受けた瞬間に [Disconnect パケット](https://wiki.vg/Protocol#Disconnect_.28login.29) を送ってキックする)
 
-<div><video controls src="https://github.com/Gai-H/fake-minecraft-server/assets/23699120/cdcf92da-02c1-434a-8759-4ca24bfccde3"></video></div>
+<div><video controls src="https://github.com/Gai-H/fake-minecraft-server/assets/23699120/30ab6074-48df-4136-937a-4fe5f84d2212"></video></div>
 
 ## Requirements
 OpenSSL - [プロトコル暗号化](https://wiki.vg/Protocol_Encryption) のため
