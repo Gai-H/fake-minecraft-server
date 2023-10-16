@@ -6,7 +6,7 @@ pub mod unsigned_short;
 pub mod uuid;
 pub mod varint;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum DatatypeError {
     ReadError,
     ConvertError,
